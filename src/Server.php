@@ -14,14 +14,15 @@ class Server extends StandardServer
     {
         // Setup custom shutdownHandler for improved debugging
         error_reporting(E_ALL);
-        ini_set('display_errors', 1); // enable during container building
-
-        // Create container
-        $container = ContainerFactory::create($config);
+        //ini_set('display_errors', 1); // enable during container building
 
         ob_start();
         register_shutdown_function([$this, "shutdownHandler"]);
         ini_set('display_errors', 0); // disable - let server + shutdown handler output errors
+
+        // Create container
+        $container = ContainerFactory::create($config);
+
 
         $schema = new Schema([
             'query' => $container->get($container->getParameter('type_namespace') . '\QueryType\RootQueryType'),
@@ -32,9 +33,13 @@ class Server extends StandardServer
         ]);
 
         $debug = Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE;
+
+        $fieldResolver = new FieldResolver();
+
         $config = [
             'schema' => $schema,
-            'debug' => $debug
+            'debug' => $debug,
+            'fieldResolver' => [$fieldResolver, 'resolve']
         ];
 
         parent::__construct($config);

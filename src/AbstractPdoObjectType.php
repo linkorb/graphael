@@ -17,11 +17,19 @@ abstract class AbstractPdoObjectType extends ObjectType
         parent::__construct($config);
     }
 
+    // TODO: rename to getOneBy
     protected function getBy($key, $value)
     {
         $stmt = $this->pdo->prepare('SELECT * FROM ' . $this->tableName . ' WHERE ' . $key . ' = :value');
         $result = $stmt->execute(['value'=>$value]);
         return $this->processRow($stmt->fetch(PDO::FETCH_ASSOC));
+    }
+
+    protected function getAllBy($key, $value)
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM ' . $this->tableName . ' WHERE ' . $key . ' = :value');
+        $result = $stmt->execute(['value'=>$value]);
+        return $this->processRows($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function getAll()
