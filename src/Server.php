@@ -7,6 +7,8 @@ use GraphQL\Server\StandardServer;
 use GraphQL\Server\ServerConfig;
 use GraphQL\Type\Schema;
 use GraphQL\Error\Debug;
+use RuntimeException;
+use Firebase\JWT\JWT;
 
 class Server extends StandardServer
 {
@@ -22,6 +24,49 @@ class Server extends StandardServer
 
         // Create container
         $container = ContainerFactory::create($config);
+
+        $rootValue = [];
+
+        // JWT?
+        $jwtKey = $container->getParameter('jwt_key');
+        if ($jwtKey[0]=='/') {
+            if (!file_exists($jwtKey)) {
+                throw new RuntimeException("File not found: $jwtKey");
+            }
+            $jwtKey = file_get_contents($jwtKey);
+            $container->setParameter('jwt_key', $jwtKey);
+        }
+        if ($jwtKey) {
+            $jwt = null;
+            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                $auth = $_SERVER['HTTP_AUTHORIZATION'];
+                $authPart = explode(' ', $auth);
+                if (count($authPart)!=2) {
+                    throw new RuntimeException("Invalid authorization header");
+                }
+                if ($authPart[0]!='Bearer') {
+                    throw new RuntimeException("Invalid authorization type");
+                }
+                $jwt = $authPart[1];
+            }
+            if (isset($_GET['jwt'])) {
+                $jwt = $_GET['jwt'];
+            }
+
+            if (!$jwt) {
+                throw new RuntimeException("Token required");
+            }
+            $token = null;
+            try {
+                $token = (array)JWT::decode($jwt, $jwtKey, array('RS256'));
+            } catch (\Exception $e) {
+                throw new RuntimeException("Token invalid");
+            }
+            if (!$token) {
+                throw new RuntimeException("Invalid JWT");
+            }
+            $rootValue['token'] = $token;
+        }
 
 
         $schema = new Schema([
@@ -39,6 +84,7 @@ class Server extends StandardServer
         $config = [
             'schema' => $schema,
             'debug' => $debug,
+            'rootValue' => $rootValue,
             'fieldResolver' => [$fieldResolver, 'resolve']
         ];
 

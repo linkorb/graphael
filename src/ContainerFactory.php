@@ -95,7 +95,7 @@ class ContainerFactory
 
         $resolver->setDefaults(array(
             'debug' => false,
-            'jwt_algo' => 'HS256',
+            'jwt_algo' => 'RS256',
         ));
         $resolver->setRequired('jwt_key');
         $resolver->setRequired('pdo_url');
