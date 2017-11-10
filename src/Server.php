@@ -29,43 +29,45 @@ class Server extends StandardServer
 
         // JWT?
         $jwtKey = $container->getParameter('jwt_key');
-        if ($jwtKey[0]=='/') {
-            if (!file_exists($jwtKey)) {
-                throw new RuntimeException("File not found: $jwtKey");
-            }
-            $jwtKey = file_get_contents($jwtKey);
-            $container->setParameter('jwt_key', $jwtKey);
-        }
         if ($jwtKey) {
-            $jwt = null;
-            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-                $auth = $_SERVER['HTTP_AUTHORIZATION'];
-                $authPart = explode(' ', $auth);
-                if (count($authPart)!=2) {
-                    throw new RuntimeException("Invalid authorization header");
+            if ($jwtKey[0]=='/') {
+                if (!file_exists($jwtKey)) {
+                    throw new RuntimeException("File not found: $jwtKey");
                 }
-                if ($authPart[0]!='Bearer') {
-                    throw new RuntimeException("Invalid authorization type");
+                $jwtKey = file_get_contents($jwtKey);
+                $container->setParameter('jwt_key', $jwtKey);
+            }
+            if ($jwtKey) {
+                $jwt = null;
+                if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                    $auth = $_SERVER['HTTP_AUTHORIZATION'];
+                    $authPart = explode(' ', $auth);
+                    if (count($authPart)!=2) {
+                        throw new RuntimeException("Invalid authorization header");
+                    }
+                    if ($authPart[0]!='Bearer') {
+                        throw new RuntimeException("Invalid authorization type");
+                    }
+                    $jwt = $authPart[1];
                 }
-                $jwt = $authPart[1];
-            }
-            if (isset($_GET['jwt'])) {
-                $jwt = $_GET['jwt'];
-            }
+                if (isset($_GET['jwt'])) {
+                    $jwt = $_GET['jwt'];
+                }
 
-            if (!$jwt) {
-                throw new RuntimeException("Token required");
+                if (!$jwt) {
+                    throw new RuntimeException("Token required");
+                }
+                $token = null;
+                try {
+                    $token = (array)JWT::decode($jwt, $jwtKey, array('RS256'));
+                } catch (\Exception $e) {
+                    throw new RuntimeException("Token invalid");
+                }
+                if (!$token) {
+                    throw new RuntimeException("Invalid JWT");
+                }
+                $rootValue['token'] = $token;
             }
-            $token = null;
-            try {
-                $token = (array)JWT::decode($jwt, $jwtKey, array('RS256'));
-            } catch (\Exception $e) {
-                throw new RuntimeException("Token invalid");
-            }
-            if (!$token) {
-                throw new RuntimeException("Invalid JWT");
-            }
-            $rootValue['token'] = $token;
         }
 
 
