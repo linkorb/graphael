@@ -16,8 +16,8 @@ class FieldResolver
 
         if (isset($fieldConfig['link'])) {
             $value = $source[$fieldName];
-            $linkType = $fieldConfig['link'][0];
-            $linkMethod = $fieldConfig['link'][1];
+            $linkType = $fieldConfig['type'];
+            $linkMethod = $fieldConfig['link'];
             $row = $linkType->{$linkMethod}($value);
             if (!$row) {
                 return null;
@@ -26,10 +26,9 @@ class FieldResolver
         }
 
         if (isset($fieldConfig['list'])) {
-            $var = $fieldConfig['list'][0];
-            $value = $source[$var];
-            $listType = $fieldConfig['list'][1];
-            $listMethod = $fieldConfig['list'][2];
+            $value = $source[$fieldName];
+            $listType = $fieldConfig['type']->getWrappedType();
+            $listMethod = $fieldConfig['list'];
             $res = $listType->{$listMethod}($value);
             if (!$res) {
                 $res = [];
