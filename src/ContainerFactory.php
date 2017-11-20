@@ -14,7 +14,6 @@ class ContainerFactory
 {
     public static function create($config)
     {
-
         $environmentPrefix = $config['environment_prefix'];
         $parameters = self::getParameters($environmentPrefix);
 
@@ -57,6 +56,10 @@ class ContainerFactory
         if (!file_exists($path)) {
             throw new RuntimeException("Invalid type_path (not found)");
         }
+
+        // Register TypeRegister
+        $definition = $container->register(TypeRegistry::class, TypeRegistry::class);
+        $definition->addArgument($container);
 
         // Auto register QueryTypes
         foreach (glob($path.'/QueryType/*QueryType.php') as $filename) {
