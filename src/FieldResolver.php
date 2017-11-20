@@ -27,7 +27,7 @@ class FieldResolver
 
         if (isset($fieldConfig['list'])) {
             $var = $fieldConfig['list'][0];
-            $value = $source['rUuid'];
+            $value = $source[$var];
             $listType = $fieldConfig['list'][1];
             $listMethod = $fieldConfig['list'][2];
             $res = $listType->{$listMethod}($value);
