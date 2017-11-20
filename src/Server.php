@@ -39,14 +39,16 @@ class Server extends StandardServer
 
         // JWT?
         $jwtKey = $container->getParameter('jwt_key');
-        if ($jwtKey[0]=='/') {
-            if (!file_exists($jwtKey)) {
-                throw new RuntimeException("File not found: $jwtKey");
-            }
-            $jwtKey = file_get_contents($jwtKey);
-            $container->setParameter('jwt_key', $jwtKey);
-        }
+
         if ($jwtKey) {
+            if ($jwtKey[0]=='/') {
+                if (!file_exists($jwtKey)) {
+                    throw new RuntimeException("File not found: $jwtKey");
+                }
+                $jwtKey = file_get_contents($jwtKey);
+                $container->setParameter('jwt_key', $jwtKey);
+            }
+
             $jwt = null;
             if (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
                 $auth = $_SERVER['HTTP_X_AUTHORIZATION'];
