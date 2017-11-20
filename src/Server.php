@@ -39,8 +39,8 @@ class Server extends StandardServer
             }
             if ($jwtKey) {
                 $jwt = null;
-                if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-                    $auth = $_SERVER['HTTP_AUTHORIZATION'];
+                if (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
+                    $auth = $_SERVER['HTTP_X_AUTHORIZATION'];
                     $authPart = explode(' ', $auth);
                     if (count($authPart)!=2) {
                         throw new RuntimeException("Invalid authorization header");
