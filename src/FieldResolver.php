@@ -4,7 +4,7 @@ namespace Graphael;
 
 class FieldResolver
 {
-    function resolve($source, $args, $context, \GraphQL\Type\Definition\ResolveInfo $info)
+    public function resolve($source, $args, $context, \GraphQL\Type\Definition\ResolveInfo $info)
     {
         $fieldName = $info->fieldName;
         $property = null;
@@ -22,6 +22,7 @@ class FieldResolver
             if (!$row) {
                 return null;
             }
+
             return $row;
         }
 
@@ -33,24 +34,27 @@ class FieldResolver
             if (!$res) {
                 $res = [];
             }
+
             return $res;
         }
-
 
         if (is_array($source) || $source instanceof \ArrayAccess) {
             if (isset($source[$fieldName])) {
                 $property = $source[$fieldName];
             }
-        } else if (is_object($source)) {
+        } elseif (is_object($source)) {
             if (isset($source->{$fieldName})) {
                 $property = $source->{$fieldName};
             }
         }
 
         if (isset($fieldConfig['convert'])) {
+            if (empty($property)) {
+                return null;
+            }
             switch ($fieldConfig['convert']) {
                 case 'stamp2dt':
-                    return date('Y-m-d', $property) . 'T' . date('H:i:s', $property) ;
+                    return date('Y-m-d', $property).'T'.date('H:i:s', $property);
             }
         }
 
