@@ -48,13 +48,19 @@ class FieldResolver
             }
         }
 
-        if (isset($fieldConfig['convert'])) {
-            if (empty($property)) {
-                return null;
-            }
+        if (isset($fieldConfig['convert']) && !empty($property)) {
             switch ($fieldConfig['convert']) {
-                case 'stamp2dt':
-                    return date('Y-m-d', $property).'T'.date('H:i:s', $property);
+                case 'stampToIsoDateTime':
+                        $date = new \DateTime();
+                        $date->setTimestamp($property);
+
+                        return $date->format('Y-m-d\TH:i:s');
+                    break;
+                case 'dateTimeToIsoDateTime':
+                        $date = new \DateTime($property);
+
+                        return $date->format('Y-m-d\TH:i:s');
+                    break;
             }
         }
 
