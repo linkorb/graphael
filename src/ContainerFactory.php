@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\Reference;
 use Psr\Container\ContainerInterface;
 use Connector\Connector;
 use ReflectionClass;
+use RuntimeException;
 use PDO;
 
 class ContainerFactory
@@ -58,19 +59,15 @@ class ContainerFactory
         }
 
         // Register TypeRegister
-        $definition = $container->register(TypeRegistry::class, TypeRegistry::class);
+        $definition = $container->register(TypeRegistryInterface::class, ContainerTypeRegistry::class);
         $definition->addArgument($container);
 
         // Auto register QueryTypes
-        foreach (glob($path.'/QueryType/*QueryType.php') as $filename) {
-            $className = $ns . '\\QueryType\\' . basename($filename, '.php');
-            if (in_array('GraphQL\\Type\\Definition\\OutputType', class_implements($className))) {
-                self::autoRegisterClass($container, $className);
+        foreach (glob($path.'/*Type.php') as $filename) {
+            $className = $ns . '\\' . basename($filename, '.php');
+            if (!is_array(class_implements($className))) {
+                throw new RuntimeException("Can't register class (failed to load, or does not implement anything): " . $className);
             }
-        }
-        // Auto register MutationTypes
-        foreach (glob($path.'/MutationType/*MutationType.php') as $filename) {
-            $className = $ns . '\\MutationType\\' . basename($filename, '.php');
             if (in_array('GraphQL\\Type\\Definition\\OutputType', class_implements($className))) {
                 self::autoRegisterClass($container, $className);
             }

@@ -4,7 +4,7 @@ namespace Graphael;
 
 use Psr\Container\ContainerInterface;
 
-class TypeRegistry
+class ContainerTypeRegistry implements TypeRegistryInterface
 {
     public function __construct(ContainerInterface $container)
     {

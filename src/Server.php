@@ -12,7 +12,7 @@ use Firebase\JWT\JWT;
 
 class Server extends StandardServer
 {
-    public function __construct($config)
+    public function __construct(array $config)
     {
         // Setup custom shutdownHandler for improved debugging
         error_reporting(E_ALL);
@@ -41,15 +41,19 @@ class Server extends StandardServer
         $jwtKey = $container->getParameter('jwt_key');
 
         if ($jwtKey) {
-            if ($jwtKey[0]=='/') {
+            if ($jwtKey[0]=='/') { // absolute path
                 if (!file_exists($jwtKey)) {
                     throw new RuntimeException("File not found: $jwtKey");
                 }
                 $jwtKey = file_get_contents($jwtKey);
                 $container->setParameter('jwt_key', $jwtKey);
+            } else {
+                // inline jwt
+                $container->setParameter('jwt_key', $jwtKey);
             }
 
             $jwt = null;
+            // try to extract JWT from HTTP headers
             if (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
                 $auth = $_SERVER['HTTP_X_AUTHORIZATION'];
                 $authPart = explode(' ', $auth);
@@ -61,11 +65,13 @@ class Server extends StandardServer
                 }
                 $jwt = $authPart[1];
             }
+            // try to extract JWT from GET parameters
             if (isset($_GET['jwt'])) {
                 $jwt = $_GET['jwt'];
             }
 
             if (!$jwt) {
+                // jwt_key configured, but no jwt provided in request
                 throw new RuntimeException("Token required");
             }
             $token = null;
@@ -78,15 +84,24 @@ class Server extends StandardServer
                 throw new RuntimeException("Invalid JWT");
             }
             $rootValue['token'] = $token;
+            if (isset($token['username'])) {
+                $rootValue['username'] = $token['username'];
+            }
+            $rootValue['someRootValue'] = 'test';
         }
 
-        $schema = new Schema([
-            'query' => $container->get($container->getParameter('type_namespace') . '\QueryType\RootQueryType'),
-            'typeLoader' => function($name) use ($container) {
-                $className = $container->getParameter('type_namespace') . '\\QueryType\\' . $name . 'QueryType';
-                return $container->get($className);
-            }
-        ]);
+        $typeNamespace = $container->getParameter('type_namespace');
+        $typePostfix = $container->getParameter('type_postfix');
+        $schema = new Schema(
+            [
+                'query' => $container->get($typeNamespace . '\QueryType'),
+                'mutation' => $container->get($typeNamespace . '\MutationType'),
+                'typeLoader' => function ($name) use ($container, $typeNamespace, $typePostfix) {
+                    $className = $typeNamespace . '\\' . $name . $typePostfix;
+                    return $container->get($className);
+                }
+            ]
+        );
 
         $debug = Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE;
 
@@ -102,7 +117,8 @@ class Server extends StandardServer
         parent::__construct($config);
     }
 
-    public function shutdownHandler() {
+    public function shutdownHandler()
+    {
         $output = ob_get_contents();
         $error = error_get_last();
         if ($error) {

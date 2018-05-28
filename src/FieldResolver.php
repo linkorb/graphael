@@ -2,6 +2,8 @@
 
 namespace Graphael;
 
+use Pwa\TimeElapsed;
+
 class FieldResolver
 {
     public function resolve($source, $args, $context, \GraphQL\Type\Definition\ResolveInfo $info)
@@ -51,16 +53,19 @@ class FieldResolver
         if (isset($fieldConfig['convert']) && !empty($property)) {
             switch ($fieldConfig['convert']) {
                 case 'stampToIsoDateTime':
-                        $date = new \DateTime();
-                        $date->setTimestamp($property);
-
-                        return $date->format('Y-m-d\TH:i:s');
-                    break;
+                    $date = new \DateTime();
+                    $date->setTimestamp($property);
+                    return $date->format('Y-m-d\TH:i:s');
+                case 'stampToElapsed':
+                    $date = new \DateTime();
+                    $date->setTimestamp($property);
+                    $elapsed = new TimeElapsed($date);
+                    return $elapsed->getElapsedTime();
                 case 'dateTimeToIsoDateTime':
-                        $date = new \DateTime($property);
-
-                        return $date->format('Y-m-d\TH:i:s');
-                    break;
+                    $date = new \DateTime($property);
+                    return $date->format('Y-m-d\TH:i:s');
+                default:
+                    throw new RuntimeException("Unsupported conversion: " . $fieldConfig['convert']);
             }
         }
 
