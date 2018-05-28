@@ -18,7 +18,7 @@
     "webonyx/graphql-php": "^0.11.2",
     "linkorb/connector": "~1.0",
     "firebase/php-jwt": "~5.0",
-    "pwa/time-elapsed": "dev-master"
+    "pwa/time-elapsed": "^1.0"
   },
   "autoload": {
     "psr-4": {
