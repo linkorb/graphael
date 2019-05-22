@@ -1,6 +1,6 @@
 <?php
 
-namespace Graphael;
+namespace Graphael\Services\DependencyInjection;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -9,7 +9,6 @@ use Psr\Container\ContainerInterface;
 use Connector\Connector;
 use ReflectionClass;
 use RuntimeException;
-use PDO;
 
 class ContainerFactory
 {

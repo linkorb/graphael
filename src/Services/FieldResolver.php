@@ -1,12 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Graphael;
+namespace Graphael\Services;
 
+use Graphael\RuntimeException;
+use GraphQL\Type\Definition\ResolveInfo;
 use Pwa\TimeElapsed;
 
 class FieldResolver
 {
-    public function resolve($source, $args, $context, \GraphQL\Type\Definition\ResolveInfo $info)
+    public function resolve($source, $args, $context, ResolveInfo $info)
     {
         $fieldName = $info->fieldName;
         $property = null;
