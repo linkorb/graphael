@@ -28,6 +28,11 @@ class JwtFactory
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($jwtSegments[1]));
 
         $token = new JsonWebToken([], $rawJwtString);
+
+        if (empty($payload->{$this->usernameClaim})) {
+            throw new AuthenticationException('No username claim passed in JWT');
+        }
+
         $token->setUser($payload->{$this->usernameClaim});
 
         return $token;
