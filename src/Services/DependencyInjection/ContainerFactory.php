@@ -6,6 +6,7 @@ use Graphael\Security\JwtFactory;
 use Graphael\Security\Provider\JwtAuthProvider;
 use Graphael\Security\SecurityChecker;
 use Graphael\Services\Error\ErrorHandler;
+use Graphael\Services\Error\ErrorHandlerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -87,7 +88,7 @@ class ContainerFactory
 
     private static function registerSecurityServices(ContainerBuilder $container): void
     {
-        $container->register(ErrorHandler::class, ErrorHandler::class);
+        $container->register(ErrorHandlerInterface::class, ErrorHandler::class);
         $container->register(JwtFactory::class, JwtFactory::class);
 
         $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
@@ -120,7 +121,7 @@ class ContainerFactory
         $resolver->setDefaults(array(
             'debug' => false,
             'jwt_algo' => 'RS256',
-            'jwt_enabled' => null,
+            'jwt_enabled' => true,
         ));
         $resolver->setRequired('pdo_url');
         return $resolver->resolve($parameters);

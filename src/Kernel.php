@@ -5,10 +5,10 @@ namespace Graphael;
 use Graphael\Security\JwtManagerInterface;
 use Graphael\Security\SecurityChecker;
 use Graphael\Services\DependencyInjection\ContainerFactory;
-use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
 use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -25,9 +25,6 @@ class Kernel
     /** @var StandardServer */
     private $server;
 
-    /** @var ErrorHandlerInterface */
-    private $errorHandler;
-
     /** @var UserProviderInterface */
     private $userProvider;
 
@@ -41,9 +38,8 @@ class Kernel
 
     public function run(): void
     {
-        $this->boot($this->serverConfig);
-
-        $this->errorHandler->initialize();
+        $container = $this->boot($this->serverConfig);
+        $this->initialize($container);
 
         $this->server->handleRequest();
     }
@@ -62,7 +58,7 @@ class Kernel
         return $this;
     }
 
-    private function boot(array $config): void
+    private function boot(array $config): ContainerInterface
     {
         // Create container
         $container = ContainerFactory::create($config);
@@ -70,13 +66,18 @@ class Kernel
         $container->set(ContainerFactory::JWT_USER_PROVIDER, $this->userProvider);
         $container->set(ContainerFactory::JWT_CERT_MANAGER, $this->jwtManager);
 
-        $this->errorHandler = $container->get(ErrorHandler::class);
+        return $container;
+    }
+
+    private function initialize(ContainerInterface $container): void
+    {
+        $container->get(ErrorHandlerInterface::class)->initialize();
 
         $rootValue = [];
 
         $request = Request::createFromGlobals();
 
-        if ($container->getParameter('jwt_enabled', true)) {
+        if ($container->getParameter('jwt_enabled')) {
             /** @var SecurityChecker $securityChecker */
             $securityChecker = $container->get(SecurityChecker::class);
             $jwtAuthenticated = $securityChecker->check($request);
