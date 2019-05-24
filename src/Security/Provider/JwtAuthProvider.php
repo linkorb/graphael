@@ -2,7 +2,6 @@
 
 namespace Graphael\Security\Provider;
 
-use Exception;
 use Firebase\JWT\JWT;
 use Graphael\Security\JWTManagerInterface;
 use Graphael\Security\Token\JsonWebToken;
@@ -31,18 +30,14 @@ class JwtAuthProvider implements AuthenticationProviderInterface
 
     public function authenticate(TokenInterface $token): TokenInterface
     {
-        try {
-            $payload = JWT::decode(
-                $token->getCredentials(),
-                $this->jwtManager->getPublicCertificate($token->getUsername()),
-                [$this->jwtAlg]
-            );
+        $payload = JWT::decode(
+            $token->getCredentials(),
+            $this->jwtManager->getPublicCertificate($token->getUsername()),
+            [$this->jwtAlg]
+        );
 
-            if (!$payload) {
-                throw new AuthenticationException();
-            }
-        } catch (Exception $e) {
-            throw new AuthenticationException('Token invalid');
+        if (!$payload) {
+            throw new AuthenticationException();
         }
 
         $user = $this->userProvider->loadUserByUsername($token->getUsername());

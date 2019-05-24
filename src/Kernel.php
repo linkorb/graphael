@@ -71,7 +71,9 @@ class Kernel
 
     private function initialize(ContainerInterface $container): void
     {
-        $container->get(ErrorHandlerInterface::class)->initialize();
+        /** @var ErrorHandlerInterface $errorHandler */
+        $errorHandler = $container->get(ErrorHandlerInterface::class);
+        $errorHandler->initialize();
 
         $rootValue = [];
 
