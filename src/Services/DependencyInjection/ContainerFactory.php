@@ -2,16 +2,23 @@
 
 namespace Graphael\Services\DependencyInjection;
 
+use Graphael\Security\JwtFactory;
+use Graphael\Security\Provider\JwtAuthProvider;
+use Graphael\Security\SecurityChecker;
+use Graphael\Services\Error\ErrorHandler;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-use Psr\Container\ContainerInterface;
 use Connector\Connector;
 use ReflectionClass;
 use RuntimeException;
 
 class ContainerFactory
 {
+    public const JWT_USER_PROVIDER = 'graphael.jwt.uers_provider';
+    public const JWT_CERT_MANAGER = 'graphael.jwt.certificate_manager';
+
     public static function create($config)
     {
         $environmentPrefix = $config['environment_prefix'];
@@ -61,6 +68,8 @@ class ContainerFactory
         $definition = $container->register(TypeRegistryInterface::class, ContainerTypeRegistry::class);
         $definition->addArgument($container);
 
+        static::registerSecurityServices($container);
+
         // Auto register QueryTypes
         foreach (glob($path.'/*Type.php') as $filename) {
             $className = $ns . '\\' . basename($filename, '.php');
@@ -74,6 +83,22 @@ class ContainerFactory
 
         return $container;
 
+    }
+
+    private static function registerSecurityServices(ContainerBuilder $container): void
+    {
+        $container->register(ErrorHandler::class, ErrorHandler::class);
+        $container->register(JwtFactory::class, JwtFactory::class);
+
+        $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
+        $authProviderDefinition->addArgument(new Reference(static::JWT_USER_PROVIDER));
+        $authProviderDefinition->addArgument(new Reference(static::JWT_CERT_MANAGER));
+        $authProviderDefinition->addArgument($container->getParameter('jwt_algo'));
+
+        $checkerDefinition = static::autoRegisterClass($container, SecurityChecker::class);
+        if ($container->hasParameter('jwt_username_claim')) {
+            $checkerDefinition->addArgument($container->getParameter('jwt_username_claim'));
+        }
     }
 
     private static function getParameters($prefix)
@@ -96,12 +121,11 @@ class ContainerFactory
             'debug' => false,
             'jwt_algo' => 'RS256',
         ));
-        $resolver->setRequired('jwt_key');
         $resolver->setRequired('pdo_url');
         return $resolver->resolve($parameters);
     }
 
-    private static function autoRegisterClass(ContainerInterface $container, $className)
+    private static function autoRegisterClass(ContainerBuilder $container, $className): Definition
     {
         $reflectionClass = new ReflectionClass($className);
         $constructor = $reflectionClass->getConstructor();
@@ -112,5 +136,7 @@ class ContainerFactory
                 $definition->addArgument(new Reference($reflectionClass->getName()));
             }
         }
+
+        return $definition;
     }
 }

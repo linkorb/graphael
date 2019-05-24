@@ -2,14 +2,15 @@
 
 namespace Graphael;
 
-use Firebase\JWT\JWT;
+use Graphael\Security\JwtManagerInterface;
+use Graphael\Security\SecurityChecker;
 use Graphael\Services\DependencyInjection\ContainerFactory;
 use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
 use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
-use RuntimeException;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
  * Responsible for services instantiation & configuration
@@ -24,6 +25,12 @@ class Kernel
     /** @var ErrorHandlerInterface */
     private $errorHandler;
 
+    /** @var UserProviderInterface */
+    private $userProvider;
+
+    /** @var JwtManagerInterface */
+    private $jwtManager;
+
     public function __construct(array $serverConfig)
     {
         $this->boot($serverConfig);
@@ -36,20 +43,41 @@ class Kernel
         $this->server->handleRequest();
     }
 
+    public function setUserProvider(UserProviderInterface $userProvider): self
+    {
+        $this->userProvider = $userProvider;
+
+        return $this;
+    }
+
+    public function setJwtManager(JwtManagerInterface $jwtManager): self
+    {
+        $this->jwtManager = $jwtManager;
+
+        return $this;
+    }
+
     private function boot(array $config): void
     {
-        $this->errorHandler = new ErrorHandler();
-
         // Create container
         $container = ContainerFactory::create($config);
 
+        $container->set(ContainerFactory::JWT_USER_PROVIDER, $this->userProvider);
+        $container->set(ContainerFactory::JWT_CERT_MANAGER, $this->jwtManager);
+
+        $this->errorHandler = $container->get(ErrorHandler::class);
+
         $rootValue = [];
 
-        // JWT?
-        $jwtKey = $container->getParameter('jwt_key');
+        $request = Request::createFromGlobals();
 
-        if ($jwtKey) {
-            $this->checkAuth($jwtKey, $container, $rootValue);
+        if ($container->getParameter('jwt_enabled', true)) {
+            /** @var SecurityChecker $securityChecker */
+            $securityChecker = $container->get(SecurityChecker::class);
+            $jwtAuthenticated = $securityChecker->check($request);
+
+            $rootValue['token'] = $jwtAuthenticated->getCredentials();
+            $rootValue['username'] = $jwtAuthenticated->getUsername();
         }
 
         $typeNamespace = $container->getParameter('type_namespace');
@@ -69,54 +97,5 @@ class Kernel
             },
             $rootValue
         );
-    }
-
-    /** TODO: Replace with Symfony Security */
-    private function checkAuth(string $jwtKey, ContainerBuilder $container, array &$rootValue)
-    {
-        if ($jwtKey[0] == '/') { // absolute path
-            if (!file_exists($jwtKey)) {
-                throw new RuntimeException("File not found: $jwtKey");
-            }
-            $jwtKey = file_get_contents($jwtKey);
-            $container->setParameter('jwt_key', $jwtKey);
-        }
-
-        $jwt = null;
-        // try to extract JWT from HTTP headers
-        if (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
-            $auth = $_SERVER['HTTP_X_AUTHORIZATION'];
-            $authPart = explode(' ', $auth);
-            if (count($authPart) != 2) {
-                throw new RuntimeException("Invalid authorization header");
-            }
-            if ($authPart[0] != 'Bearer') {
-                throw new RuntimeException("Invalid authorization type");
-            }
-            $jwt = $authPart[1];
-        }
-        // try to extract JWT from GET parameters
-        if (isset($_GET['jwt'])) {
-            $jwt = $_GET['jwt'];
-        }
-
-        if (!$jwt) {
-            // jwt_key configured, but no jwt provided in request
-            throw new RuntimeException("Token required");
-        }
-        $token = null;
-        try {
-            $token = (array)JWT::decode($jwt, $jwtKey, array('RS256'));
-        } catch (\Exception $e) {
-            throw new RuntimeException("Token invalid");
-        }
-        if (!$token) {
-            throw new RuntimeException("Invalid JWT");
-        }
-        $rootValue['token'] = $token;
-        if (isset($token['username'])) {
-            $rootValue['username'] = $token['username'];
-        }
-        $rootValue['someRootValue'] = 'test';
     }
 }
