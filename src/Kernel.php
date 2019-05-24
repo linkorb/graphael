@@ -19,6 +19,9 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  */
 class Kernel
 {
+    /** @var array */
+    private $serverConfig;
+
     /** @var StandardServer */
     private $server;
 
@@ -33,11 +36,13 @@ class Kernel
 
     public function __construct(array $serverConfig)
     {
-        $this->boot($serverConfig);
+        $this->serverConfig = $serverConfig;
     }
 
     public function run(): void
     {
+        $this->boot($this->serverConfig);
+
         $this->errorHandler->initialize();
 
         $this->server->handleRequest();

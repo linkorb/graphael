@@ -21,7 +21,7 @@ final class ErrorHandler implements ErrorHandlerInterface
 
         ob_start();
         register_shutdown_function([$this, 'onShutdown']);
-        ini_set('display_errors', 0); // disable - let server + shutdown handler output errors
+        ini_set('display_errors', '0'); // disable - let server + shutdown handler output errors
     }
 
     public function onShutdown(): void

@@ -120,6 +120,7 @@ class ContainerFactory
         $resolver->setDefaults(array(
             'debug' => false,
             'jwt_algo' => 'RS256',
+            'jwt_enabled' => null,
         ));
         $resolver->setRequired('pdo_url');
         return $resolver->resolve($parameters);
