@@ -79,14 +79,12 @@ class Kernel
 
         $request = Request::createFromGlobals();
 
-        if ($container->getParameter('jwt_enabled')) {
-            /** @var SecurityChecker $securityChecker */
-            $securityChecker = $container->get(SecurityChecker::class);
-            $jwtAuthenticated = $securityChecker->check($request);
+        /** @var SecurityChecker $securityChecker */
+        $securityChecker = $container->get(SecurityChecker::class);
+        $jwtAuthenticated = $securityChecker->check($request, $container->getParameter('jwt_enabled'));
 
-            $rootValue['token'] = $jwtAuthenticated->getCredentials();
-            $rootValue['username'] = $jwtAuthenticated->getUsername();
-        }
+        $rootValue['token'] = $jwtAuthenticated->getCredentials();
+        $rootValue['username'] = $jwtAuthenticated->getUsername();
 
         $typeNamespace = $container->getParameter('type_namespace');
         $typePostfix = $container->getParameter('type_postfix');
@@ -103,7 +101,8 @@ class Kernel
                 $className = $typeNamespace . '\\' . $name . $typePostfix;
                 return $container->get($className);
             },
-            $rootValue
+            $rootValue,
+            $jwtAuthenticated
         );
     }
 }

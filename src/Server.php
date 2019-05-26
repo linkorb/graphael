@@ -7,6 +7,7 @@ use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
 use GraphQL\Error\Debug;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class Server extends StandardServer
 {
@@ -14,7 +15,8 @@ class Server extends StandardServer
         ObjectType $queryType,
         ObjectType $mutationType,
         callable $typeLoader,
-        array $rootValue
+        array $rootValue,
+        TokenInterface $token
     )
     {
         $schema = new Schema(
@@ -30,6 +32,9 @@ class Server extends StandardServer
             'debug' => Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE,
             'rootValue' => $rootValue,
             'fieldResolver' => [new FieldResolver(), 'resolve'],
+            'context' => [
+                'authentication' => $token,
+            ],
         ];
 
         parent::__construct($config);
