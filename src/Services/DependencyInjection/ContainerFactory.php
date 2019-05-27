@@ -23,6 +23,8 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 class ContainerFactory
 {
@@ -95,6 +97,21 @@ class ContainerFactory
 
     }
 
+    public static function normalizedVoters(array $voters): array
+    {
+        $normalizedVoters = [];
+
+        foreach ($voters as $voter) {
+            if (is_string($voter)) {
+                $normalizedVoters[] = new Reference($voter);
+            } elseif ($voter instanceof VoterInterface) {
+                $normalizedVoters[] = $voter;
+            }
+        }
+
+        return $normalizedVoters;
+    }
+
     private static function registerSecurityServices(ContainerBuilder $container): void
     {
         $container->register(ErrorHandlerInterface::class, ErrorHandler::class);
@@ -119,7 +136,8 @@ class ContainerFactory
             AccessDecisionManagerInterface::class,
             AccessDecisionManager::class
         );
-        $accessDecisionManager->addArgument([]);
+        // Will be defined in Kernel
+        $accessDecisionManager->addArgument(null);
         $accessDecisionManager->addArgument(AccessDecisionManager::STRATEGY_UNANIMOUS);
         $accessDecisionManager->addArgument(false);
         $accessDecisionManager->addArgument(false);
@@ -131,6 +149,8 @@ class ContainerFactory
 
         static::autoRegisterClass($container, AuthorizationChecker::class);
         $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class);
+
+        $container->register(RoleVoter::class, RoleVoter::class);
     }
 
     private static function getParameters($prefix)
