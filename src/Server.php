@@ -11,6 +11,8 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class Server extends StandardServer
 {
+    public const CONTEXT_AUTHENTICATION_KEY = 'authentication';
+
     public function __construct(
         ObjectType $queryType,
         ObjectType $mutationType,
@@ -33,7 +35,7 @@ class Server extends StandardServer
             'rootValue' => $rootValue,
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
-                'authentication' => $token,
+                static::CONTEXT_AUTHENTICATION_KEY => $token,
             ],
         ];
 
