@@ -3,13 +3,14 @@
 namespace Graphael;
 
 use Graphael\Security\JwtManagerInterface;
-use Graphael\Security\SecurityChecker;
+use Graphael\Security\SecurityFacade;
 use Graphael\Services\DependencyInjection\ContainerFactory;
 use Graphael\Services\Error\ErrorHandlerInterface;
 use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
@@ -79,12 +80,9 @@ class Kernel
 
         $request = Request::createFromGlobals();
 
-        /** @var SecurityChecker $securityChecker */
-        $securityChecker = $container->get(SecurityChecker::class);
-        $jwtAuthenticated = $securityChecker->check($request, $container->getParameter('jwt_enabled'));
-
-        $rootValue['token'] = $jwtAuthenticated->getCredentials();
-        $rootValue['username'] = $jwtAuthenticated->getUsername();
+        /** @var SecurityFacade $securityFacade */
+        $securityFacade = $container->get(SecurityFacade::class);
+        $securityFacade->initialize($request, (bool) $container->getParameter('jwt_enabled'));
 
         $typeNamespace = $container->getParameter('type_namespace');
         $typePostfix = $container->getParameter('type_postfix');
@@ -102,7 +100,7 @@ class Kernel
                 return $container->get($className);
             },
             $rootValue,
-            $jwtAuthenticated
+            $container->get(AuthorizationCheckerInterface::class)
         );
     }
 }

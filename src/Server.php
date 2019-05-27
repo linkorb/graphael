@@ -7,18 +7,18 @@ use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
 use GraphQL\Error\Debug;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class Server extends StandardServer
 {
-    public const CONTEXT_AUTHENTICATION_KEY = 'authentication';
+    public const CONTEXT_AUTHORIZATION_KEY = 'authorization';
 
     public function __construct(
         ObjectType $queryType,
         ObjectType $mutationType,
         callable $typeLoader,
         array $rootValue,
-        TokenInterface $token
+        AuthorizationCheckerInterface $authorizationChecker
     )
     {
         $schema = new Schema(
@@ -35,7 +35,7 @@ class Server extends StandardServer
             'rootValue' => $rootValue,
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
-                static::CONTEXT_AUTHENTICATION_KEY => $token,
+                static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
             ],
         ];
 

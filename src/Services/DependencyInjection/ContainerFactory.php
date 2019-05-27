@@ -4,7 +4,7 @@ namespace Graphael\Services\DependencyInjection;
 
 use Graphael\Security\JwtFactory;
 use Graphael\Security\Provider\JwtAuthProvider;
-use Graphael\Security\SecurityChecker;
+use Graphael\Security\SecurityFacade;
 use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
 use Symfony\Component\DependencyInjection\Definition;
@@ -14,6 +14,15 @@ use Symfony\Component\DependencyInjection\Reference;
 use Connector\Connector;
 use ReflectionClass;
 use RuntimeException;
+use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
+use Symfony\Component\Security\Core\Authentication\AuthenticationProviderManager;
+use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class ContainerFactory
 {
@@ -96,10 +105,32 @@ class ContainerFactory
         $authProviderDefinition->addArgument(new Reference(static::JWT_CERT_MANAGER));
         $authProviderDefinition->addArgument($container->getParameter('jwt_algo'));
 
-        $checkerDefinition = static::autoRegisterClass($container, SecurityChecker::class);
+        $container->setAlias(AuthenticationProviderInterface::class, JwtAuthProvider::class);
+
+        $container->register(TokenStorageInterface::class, TokenStorage::class);
+
+        $authenticationManager = $container->register(
+            AuthenticationManagerInterface::class,
+            AuthenticationProviderManager::class
+        );
+        $authenticationManager->addArgument([new Reference(JwtAuthProvider::class)]);
+
+        $accessDecisionManager = $container->register(
+            AccessDecisionManagerInterface::class,
+            AccessDecisionManager::class
+        );
+        $accessDecisionManager->addArgument([]);
+        $accessDecisionManager->addArgument(AccessDecisionManager::STRATEGY_UNANIMOUS);
+        $accessDecisionManager->addArgument(false);
+        $accessDecisionManager->addArgument(false);
+
+        $checkerDefinition = static::autoRegisterClass($container, SecurityFacade::class);
         if ($container->hasParameter('jwt_username_claim')) {
             $checkerDefinition->addArgument($container->getParameter('jwt_username_claim'));
         }
+
+        $authChecker = static::autoRegisterClass($container, AuthorizationChecker::class);
+        $container->setAlias(AuthorizationCheckerInterface::class, $authChecker);
     }
 
     private static function getParameters($prefix)
@@ -121,8 +152,9 @@ class ContainerFactory
         $resolver->setDefaults(array(
             'debug' => false,
             'jwt_algo' => 'RS256',
-            'jwt_enabled' => true,
+            'jwt_enabled' => 1,
         ));
+        $resolver->setAllowedTypes('jwt_enabled', ['int']);
         $resolver->setRequired('pdo_url');
         return $resolver->resolve($parameters);
     }
