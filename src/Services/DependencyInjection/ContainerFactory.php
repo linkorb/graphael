@@ -129,8 +129,8 @@ class ContainerFactory
             $checkerDefinition->addArgument($container->getParameter('jwt_username_claim'));
         }
 
-        $authChecker = static::autoRegisterClass($container, AuthorizationChecker::class);
-        $container->setAlias(AuthorizationCheckerInterface::class, $authChecker);
+        static::autoRegisterClass($container, AuthorizationChecker::class);
+        $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class);
     }
 
     private static function getParameters($prefix)
