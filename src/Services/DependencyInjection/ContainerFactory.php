@@ -90,7 +90,8 @@ class ContainerFactory
                 throw new RuntimeException("Can't register class (failed to load, or does not implement anything): " . $className);
             }
             if (in_array('GraphQL\\Type\\Definition\\OutputType', class_implements($className))) {
-                self::autoRegisterClass($container, $className);
+                self::autoRegisterClass($container, $className)
+                    ->setPublic(true);
             }
         }
 
@@ -115,7 +116,7 @@ class ContainerFactory
 
     private static function registerSecurityServices(ContainerBuilder $container): void
     {
-        $container->register(ErrorHandlerInterface::class, ErrorHandler::class);
+        $container->register(ErrorHandlerInterface::class, ErrorHandler::class)->setPublic(true);
         $container->register(JwtFactory::class, JwtFactory::class);
 
         $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
@@ -143,13 +144,15 @@ class ContainerFactory
         $accessDecisionManager->addArgument(false);
         $accessDecisionManager->addArgument(false);
 
-        $checkerDefinition = static::autoRegisterClass($container, SecurityFacade::class);
+        $checkerDefinition = static::autoRegisterClass($container, SecurityFacade::class)
+            ->setPublic(true);
         if ($container->hasParameter('jwt_username_claim')) {
             $checkerDefinition->addArgument($container->getParameter('jwt_username_claim'));
         }
 
         static::autoRegisterClass($container, AuthorizationChecker::class);
-        $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class);
+        $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class)
+            ->setPublic(true);
 
         $container->register(RoleVoter::class, RoleVoter::class);
         $container->register(UsernameVoter::class, UsernameVoter::class);

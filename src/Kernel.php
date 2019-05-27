@@ -10,7 +10,7 @@ use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -79,7 +79,7 @@ class Kernel
         $container->set(ContainerFactory::JWT_USER_PROVIDER, $this->userProvider);
         $container->set(ContainerFactory::JWT_CERT_MANAGER, $this->jwtManager);
 
-        $authChecker = $container->getDefinition(AuthorizationChecker::class);
+        $authChecker = $container->getDefinition(AccessDecisionManagerInterface::class);
         $authChecker->replaceArgument(0, ContainerFactory::normalizedVoters($this->authVoters));
 
         $container->compile();
