@@ -2,6 +2,7 @@
 
 namespace Graphael\Services\DependencyInjection;
 
+use Graphael\Security\Authorization\UsernameVoter;
 use Graphael\Security\JwtFactory;
 use Graphael\Security\Provider\JwtAuthProvider;
 use Graphael\Security\SecurityFacade;
@@ -151,6 +152,7 @@ class ContainerFactory
         $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class);
 
         $container->register(RoleVoter::class, RoleVoter::class);
+        $container->register(UsernameVoter::class, UsernameVoter::class);
     }
 
     private static function getParameters($prefix)
