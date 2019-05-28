@@ -4,14 +4,15 @@ namespace Graphael\Entity\Security;
 
 class UsernameAuthorization implements AuthorizationEntityInterface
 {
+    /** @var string|null */
     private $accessedUsername;
 
-    public function __construct($accessedUsername)
+    public function __construct(?string $accessedUsername)
     {
         $this->accessedUsername = $accessedUsername;
     }
 
-    public function getAccessedUsername(): string
+    public function getAccessedUsername(): ?string
     {
         return $this->accessedUsername;
     }

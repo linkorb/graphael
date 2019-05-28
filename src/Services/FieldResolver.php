@@ -2,7 +2,8 @@
 
 namespace Graphael\Services;
 
-use Graphael\RuntimeException;
+use DateTime;
+use RuntimeException;
 use GraphQL\Type\Definition\ResolveInfo;
 use Pwa\TimeElapsed;
 
@@ -22,7 +23,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $linkType = $fieldConfig['type'];
             $linkMethod = $fieldConfig['link'];
-            $row = $linkType->{$linkMethod}($value);
+            $row = $linkType->{$linkMethod}($value, $context);
             if (!$row) {
                 return null;
             }
@@ -34,7 +35,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $listType = $fieldConfig['type']->getWrappedType();
             $listMethod = $fieldConfig['list'];
-            $res = $listType->{$listMethod}($value);
+            $res = $listType->{$listMethod}($value, $context);
             if (!$res) {
                 $res = [];
             }
@@ -55,16 +56,16 @@ class FieldResolver
         if (isset($fieldConfig['convert']) && !empty($property)) {
             switch ($fieldConfig['convert']) {
                 case 'stampToIsoDateTime':
-                    $date = new \DateTime();
+                    $date = new DateTime();
                     $date->setTimestamp($property);
                     return $date->format('Y-m-d\TH:i:s');
                 case 'stampToElapsed':
-                    $date = new \DateTime();
+                    $date = new DateTime();
                     $date->setTimestamp($property);
                     $elapsed = new TimeElapsed($date);
                     return $elapsed->getElapsedTime();
                 case 'dateTimeToIsoDateTime':
-                    $date = new \DateTime($property);
+                    $date = new DateTime($property);
                     return $date->format('Y-m-d\TH:i:s');
                 default:
                     throw new RuntimeException("Unsupported conversion: " . $fieldConfig['convert']);
