@@ -15,6 +15,9 @@ class FieldResolver
         $property = null;
 
         $fieldConfig = $info->parentType->getField($fieldName)->config;
+
+        $authorize = isset($fieldConfig['authorize']) ? $fieldConfig['authorize'] : true;
+
         if (isset($fieldConfig['alias'])) {
             $fieldName = $fieldConfig['alias'];
         }
@@ -23,7 +26,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $linkType = $fieldConfig['type'];
             $linkMethod = $fieldConfig['link'];
-            $row = $linkType->{$linkMethod}($value, $context);
+            $row = $linkType->{$linkMethod}($value, $context, $authorize);
             if (!$row) {
                 return null;
             }
@@ -35,7 +38,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $listType = $fieldConfig['type']->getWrappedType();
             $listMethod = $fieldConfig['list'];
-            $res = $listType->{$listMethod}($value, $context);
+            $res = $listType->{$listMethod}($value, $context, $authorize);
             if (!$res) {
                 $res = [];
             }
