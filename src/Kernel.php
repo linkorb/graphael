@@ -2,7 +2,6 @@
 
 namespace Graphael;
 
-use Graphael\Security\JwtManagerInterface;
 use Graphael\Security\SecurityFacade;
 use Graphael\Services\DependencyInjection\ContainerFactory;
 use Graphael\Services\Error\ErrorHandlerInterface;
@@ -10,10 +9,7 @@ use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
  * Responsible for services instantiation & configuration
@@ -28,15 +24,6 @@ class Kernel
     /** @var StandardServer */
     private $server;
 
-    /** @var UserProviderInterface */
-    private $userProvider;
-
-    /** @var JwtManagerInterface */
-    private $jwtManager;
-
-    /** @var string[]|VoterInterface[] */
-    private $authVoters;
-
     public function __construct(array $serverConfig)
     {
         $this->serverConfig = $serverConfig;
@@ -50,37 +37,10 @@ class Kernel
         $this->server->handleRequest();
     }
 
-    public function setUserProvider(UserProviderInterface $userProvider): self
-    {
-        $this->userProvider = $userProvider;
-
-        return $this;
-    }
-
-    public function setJwtManager(JwtManagerInterface $jwtManager): self
-    {
-        $this->jwtManager = $jwtManager;
-
-        return $this;
-    }
-
-    public function setAuthorizationVoters(array $voters): self
-    {
-        $this->authVoters = $voters;
-
-        return $this;
-    }
-
     private function boot(array $config): ContainerInterface
     {
         // Create container
         $container = ContainerFactory::create($config);
-
-        $container->set(ContainerFactory::JWT_USER_PROVIDER, $this->userProvider);
-        $container->set(ContainerFactory::JWT_CERT_MANAGER, $this->jwtManager);
-
-        $authChecker = $container->getDefinition(AccessDecisionManagerInterface::class);
-        $authChecker->replaceArgument(0, ContainerFactory::normalizedVoters($this->authVoters));
 
         $container->compile();
 
@@ -99,7 +59,7 @@ class Kernel
 
         /** @var SecurityFacade $securityFacade */
         $securityFacade = $container->get(SecurityFacade::class);
-        $securityFacade->initialize($request, (bool) $container->getParameter('jwt_enabled'));
+        $securityFacade->initialize($request, (bool) $container->getParameter('jwt_key'));
 
         $typeNamespace = $container->getParameter('type_namespace');
         $typePostfix = $container->getParameter('type_postfix');
@@ -109,6 +69,9 @@ class Kernel
         /** @var ObjectType $mutationType */
         $mutationType = $container->get($typeNamespace . '\MutationType');
 
+        /** @var AuthorizationCheckerInterface $checker */
+        $checker = $container->get(AuthorizationCheckerInterface::class);
+
         $this->server = new Server(
             $queryType,
             $mutationType,
@@ -117,7 +80,7 @@ class Kernel
                 return $container->get($className);
             },
             $rootValue,
-            $container->get(AuthorizationCheckerInterface::class)
+            $checker
         );
     }
 }

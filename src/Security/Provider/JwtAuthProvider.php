@@ -3,7 +3,7 @@
 namespace Graphael\Security\Provider;
 
 use Firebase\JWT\JWT;
-use Graphael\Security\JWTManagerInterface;
+use Graphael\Security\JwtCertManager\JwtCertManagerInterface;
 use Graphael\Security\Token\JsonWebToken;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -15,13 +15,13 @@ class JwtAuthProvider implements AuthenticationProviderInterface
     /**  @var UserProviderInterface */
     private $userProvider;
 
-    /** @var JWTManagerInterface */
+    /** @var JwtCertManagerInterface */
     private $jwtManager;
 
     /** @var string */
     private $jwtAlg;
 
-    public function __construct(UserProviderInterface $userProvider, JWTManagerInterface $jwtManager, string $jwtAlg)
+    public function __construct(UserProviderInterface $userProvider, JwtCertManagerInterface $jwtManager, string $jwtAlg)
     {
         $this->userProvider = $userProvider;
         $this->jwtManager = $jwtManager;

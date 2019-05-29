@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security;
+namespace Graphael\Security\JwtCertManager;
 
-interface JwtManagerInterface
+interface JwtCertManagerInterface
 {
     public function getPublicCertificate(string $username): string;
 }

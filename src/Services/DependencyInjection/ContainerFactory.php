@@ -3,6 +3,7 @@
 namespace Graphael\Services\DependencyInjection;
 
 use Graphael\Security\Authorization\UsernameVoter;
+use Graphael\Security\JwtCertManager\JwtCertManagerInterface;
 use Graphael\Security\JwtFactory;
 use Graphael\Security\Provider\JwtAuthProvider;
 use Graphael\Security\SecurityFacade;
@@ -26,11 +27,11 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class ContainerFactory
 {
-    public const JWT_USER_PROVIDER = 'graphael.jwt.uers_provider';
-    public const JWT_CERT_MANAGER = 'graphael.jwt.certificate_manager';
+    public const AUTH_VOTERS = 'auth_voters';
 
     public static function create($config)
     {
@@ -44,6 +45,11 @@ class ContainerFactory
         }
         foreach ($parameters as $key=>$value) {
             $container->setParameter($key, $value);
+        }
+
+        if (file_exists($container->getParameter('jwt_key'))) {
+            $jwtKey = file_get_contents($container->getParameter('jwt_key'));
+            $container->setParameter('jwt_key', $jwtKey);
         }
 
         // === setup database connection ===s
@@ -81,7 +87,7 @@ class ContainerFactory
         $definition = $container->register(TypeRegistryInterface::class, ContainerTypeRegistry::class);
         $definition->addArgument($container);
 
-        static::registerSecurityServices($container);
+        static::registerSecurityServices($container, $config);
 
         // Auto register QueryTypes
         foreach (glob($path.'/*Type.php') as $filename) {
@@ -114,14 +120,14 @@ class ContainerFactory
         return $normalizedVoters;
     }
 
-    private static function registerSecurityServices(ContainerBuilder $container): void
+    private static function registerSecurityServices(ContainerBuilder $container, array $config): void
     {
         $container->register(ErrorHandlerInterface::class, ErrorHandler::class)->setPublic(true);
         $container->register(JwtFactory::class, JwtFactory::class);
 
         $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
-        $authProviderDefinition->addArgument(new Reference(static::JWT_USER_PROVIDER));
-        $authProviderDefinition->addArgument(new Reference(static::JWT_CERT_MANAGER));
+        $authProviderDefinition->addArgument(new Reference(UserProviderInterface::class));
+        $authProviderDefinition->addArgument(new Reference(JwtCertManagerInterface::class));
         $authProviderDefinition->addArgument($container->getParameter('jwt_algo'));
 
         $container->setAlias(AuthenticationProviderInterface::class, JwtAuthProvider::class);
@@ -139,7 +145,7 @@ class ContainerFactory
             AccessDecisionManager::class
         );
         // Will be defined in Kernel
-        $accessDecisionManager->addArgument(null);
+        $accessDecisionManager->addArgument(static::normalizedVoters($config[static::AUTH_VOTERS]));
         $accessDecisionManager->addArgument(AccessDecisionManager::STRATEGY_UNANIMOUS);
         $accessDecisionManager->addArgument(false);
         $accessDecisionManager->addArgument(false);
@@ -156,6 +162,14 @@ class ContainerFactory
 
         $container->register(RoleVoter::class, RoleVoter::class);
         $container->register(UsernameVoter::class, UsernameVoter::class);
+
+        if (is_object($config[JwtCertManagerInterface::class])) {
+            $container->set(JwtCertManagerInterface::class, $config[JwtCertManagerInterface::class]);
+        } elseif (!empty($config[JwtCertManagerInterface::class])) {
+            $container->setAlias(JwtCertManagerInterface::class, $config[JwtCertManagerInterface::class]);
+        }
+
+        $container->set(UserProviderInterface::class, $config[UserProviderInterface::class]);
     }
 
     private static function getParameters($prefix)
@@ -177,9 +191,9 @@ class ContainerFactory
         $resolver->setDefaults(array(
             'debug' => false,
             'jwt_algo' => 'RS256',
-            'jwt_enabled' => 1,
+            'jwt_enabled' => null,
         ));
-        $resolver->setAllowedTypes('jwt_enabled', ['int']);
+        $resolver->setAllowedTypes('jwt_enabled', ['string', 'null']);
         $resolver->setRequired('pdo_url');
         return $resolver->resolve($parameters);
     }
