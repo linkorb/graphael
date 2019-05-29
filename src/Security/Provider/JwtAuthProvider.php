@@ -42,7 +42,7 @@ class JwtAuthProvider implements AuthenticationProviderInterface
 
         $user = $this->userProvider->loadUserByUsername($token->getUsername());
 
-        $authToken = new JsonWebToken($user->getRoles(), $token->getCredentials());
+        $authToken = new JsonWebToken($token->getRoles(), $token->getCredentials());
         $authToken->setUser($user);
         $authToken->setAuthenticated(true);
 

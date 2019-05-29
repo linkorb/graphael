@@ -59,7 +59,12 @@ class Kernel
 
         /** @var SecurityFacade $securityFacade */
         $securityFacade = $container->get(SecurityFacade::class);
-        $securityFacade->initialize($request, (bool) $container->getParameter('jwt_key'));
+        $securityFacade->initialize(
+            $request,
+            (bool) $container->getParameter('jwt_key'),
+            $container->getParameter('jwt_username_claim'),
+            $container->getParameter('jwt_roles_claim')
+        );
 
         $typeNamespace = $container->getParameter('type_namespace');
         $typePostfix = $container->getParameter('type_postfix');

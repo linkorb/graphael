@@ -20,7 +20,8 @@
     "firebase/php-jwt": "~5.0",
     "pwa/time-elapsed": "^1.0",
     "symfony/security-core": "^4.2",
-    "symfony/http-foundation": "^4.2"
+    "symfony/http-foundation": "^4.2",
+    "ext-pdo": "*"
   },
   "autoload": {
     "psr-4": {

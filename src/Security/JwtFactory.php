@@ -12,8 +12,11 @@ use UnexpectedValueException;
 class JwtFactory
 {
     public const USERNAME_CLAIM_ID = 'username';
+    public const ROLES_CLAIM_ID = 'roles';
 
     private $usernameClaim = self::USERNAME_CLAIM_ID;
+
+    private $rolesClaim = self::ROLES_CLAIM_ID;
 
     public function createFromRequest(Request $request): TokenInterface
     {
@@ -27,7 +30,11 @@ class JwtFactory
 
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($jwtSegments[1]));
 
-        $token = new JsonWebToken([], $rawJwtString);
+        if (!$payload->{$this->rolesClaim} || !$payload->{$this->usernameClaim}) {
+            throw new AuthenticationException('Username and roles claims should both exists in JWT');
+        }
+
+        $token = new JsonWebToken($payload->{$this->rolesClaim}, $rawJwtString);
 
         if (empty($payload->{$this->usernameClaim})) {
             throw new AuthenticationException('No username claim passed in JWT');
@@ -41,6 +48,13 @@ class JwtFactory
     public function setUsernameClaim(string $usernameClaim): self
     {
         $this->usernameClaim = $usernameClaim;
+
+        return $this;
+    }
+
+    public function setRolesClaim(string $rolesClaim): self
+    {
+        $this->rolesClaim = $rolesClaim;
 
         return $this;
     }

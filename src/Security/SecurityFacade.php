@@ -16,9 +16,6 @@ class SecurityFacade
     /** @var JwtFactory */
     private $jwtFactory;
 
-    /** @var string|null */
-    private $usernameClaim;
-
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
@@ -28,16 +25,19 @@ class SecurityFacade
     public function __construct(
         TokenStorageInterface $tokenStorage,
         AuthenticationManagerInterface $authenticationManager,
-        JwtFactory $jwtFactory,
-        string $usernameClaim = null
+        JwtFactory $jwtFactory
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->authenticationManager = $authenticationManager;
         $this->jwtFactory = $jwtFactory;
-        $this->usernameClaim = $usernameClaim;
     }
 
-    public function initialize(Request $request, bool $jwtEnabled): void
+    public function initialize(
+        Request $request,
+        bool $jwtEnabled,
+        ?string $usernameClaim,
+        ?string $rolesClaim
+    ): void
     {
         // Anonymous user means absence of jwt auth
         if (!$jwtEnabled) {
@@ -51,8 +51,12 @@ class SecurityFacade
         }
 
         try {
-            if ($this->usernameClaim) {
-                $this->jwtFactory->setUsernameClaim($this->usernameClaim);
+            if ($usernameClaim) {
+                $this->jwtFactory->setUsernameClaim($usernameClaim);
+            }
+
+            if ($rolesClaim) {
+                $this->jwtFactory->setRolesClaim($rolesClaim);
             }
 
             $unauthenticatedToken = $this->jwtFactory->createFromRequest($request);

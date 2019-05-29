@@ -3,12 +3,17 @@
 namespace Graphael\Services\DependencyInjection;
 
 use Graphael\Security\Authorization\UsernameVoter;
+use Graphael\Security\JwtCertManager\JwtCertManager;
 use Graphael\Security\JwtCertManager\JwtCertManagerInterface;
 use Graphael\Security\JwtFactory;
 use Graphael\Security\Provider\JwtAuthProvider;
 use Graphael\Security\SecurityFacade;
+use Graphael\Security\UserProvider\DefaultJwtDataMapper;
+use Graphael\Security\UserProvider\JwtDataMapperInterface;
+use Graphael\Security\UserProvider\JwtUserProvider;
 use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
+use PDO;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -125,11 +130,6 @@ class ContainerFactory
         $container->register(ErrorHandlerInterface::class, ErrorHandler::class)->setPublic(true);
         $container->register(JwtFactory::class, JwtFactory::class);
 
-        $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
-        $authProviderDefinition->addArgument(new Reference(UserProviderInterface::class));
-        $authProviderDefinition->addArgument(new Reference(JwtCertManagerInterface::class));
-        $authProviderDefinition->addArgument($container->getParameter('jwt_algo'));
-
         $container->setAlias(AuthenticationProviderInterface::class, JwtAuthProvider::class);
 
         $container->register(TokenStorageInterface::class, TokenStorage::class);
@@ -150,11 +150,8 @@ class ContainerFactory
         $accessDecisionManager->addArgument(false);
         $accessDecisionManager->addArgument(false);
 
-        $checkerDefinition = static::autoRegisterClass($container, SecurityFacade::class)
+        static::autoRegisterClass($container, SecurityFacade::class)
             ->setPublic(true);
-        if ($container->hasParameter('jwt_username_claim')) {
-            $checkerDefinition->addArgument($container->getParameter('jwt_username_claim'));
-        }
 
         static::autoRegisterClass($container, AuthorizationChecker::class);
         $container->setAlias(AuthorizationCheckerInterface::class, AuthorizationChecker::class)
@@ -163,13 +160,27 @@ class ContainerFactory
         $container->register(RoleVoter::class, RoleVoter::class);
         $container->register(UsernameVoter::class, UsernameVoter::class);
 
-        if (is_object($config[JwtCertManagerInterface::class])) {
-            $container->set(JwtCertManagerInterface::class, $config[JwtCertManagerInterface::class]);
-        } elseif (!empty($config[JwtCertManagerInterface::class])) {
-            $container->setAlias(JwtCertManagerInterface::class, $config[JwtCertManagerInterface::class]);
+        $container->register(JwtCertManager::class, JwtCertManager::class)
+            ->addArgument($container->getParameter('jwt_key'));
+
+        static::registerOrAlias($container, JwtCertManagerInterface::class, $config[JwtCertManagerInterface::class]);
+
+        $container->register(DefaultJwtDataMapper::class, DefaultJwtDataMapper::class);
+
+        static::registerOrAlias($container, JwtDataMapperInterface::class, $config[JwtDataMapperInterface::class]);
+
+        if ($container->has(JwtDataMapperInterface::class)) {
+            $container->register(JwtUserProvider::class, JwtUserProvider::class)
+                ->addArgument(new Reference(PDO::class))
+                ->addArgument(new Reference(JwtDataMapperInterface::class));
         }
 
-        $container->set(UserProviderInterface::class, $config[UserProviderInterface::class]);
+        static::registerOrAlias($container, UserProviderInterface::class, $config[UserProviderInterface::class]);
+
+        $authProviderDefinition = $container->register(JwtAuthProvider::class, JwtAuthProvider::class);
+        $authProviderDefinition->addArgument(new Reference(UserProviderInterface::class));
+        $authProviderDefinition->addArgument(new Reference(JwtCertManagerInterface::class));
+        $authProviderDefinition->addArgument($container->getParameter('jwt_algo'));
     }
 
     private static function getParameters($prefix)
@@ -191,10 +202,15 @@ class ContainerFactory
         $resolver->setDefaults(array(
             'debug' => false,
             'jwt_algo' => 'RS256',
-            'jwt_enabled' => null,
+            'jwt_key' => null,
+            'jwt_username_claim' => null,
+            'jwt_roles_claim' => null,
         ));
-        $resolver->setAllowedTypes('jwt_enabled', ['string', 'null']);
+        $resolver->setAllowedTypes('jwt_key', ['string', 'null']);
+        $resolver->setAllowedTypes('jwt_username_claim', ['string', 'null']);
+        $resolver->setAllowedTypes('jwt_roles_claim', ['string', 'null']);
         $resolver->setRequired('pdo_url');
+
         return $resolver->resolve($parameters);
     }
 
@@ -211,5 +227,14 @@ class ContainerFactory
         }
 
         return $definition;
+    }
+
+    private static function registerOrAlias(ContainerBuilder $container, string $id, $value): void
+    {
+        if (is_object($value)) {
+            $container->set($id, $value);
+        } elseif (is_string($value)) {
+            $container->setAlias($id, $value);
+        }
     }
 }
