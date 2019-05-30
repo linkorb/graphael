@@ -18,7 +18,7 @@ trait AuthorizationContextAwareTrait
 
         $this->assertGranted(
             $context,
-            [UsernameVoter::USER_ROLE],
+            [UsernameVoter::USER_ROLE, $context[Server::CONTEXT_ADMIN_ROLE_KEY]],
             new UsernameAuthorization($username),
             'Access to another user\'s data denied'
         );

@@ -3,12 +3,13 @@
 namespace Graphael\Security\Authorization;
 
 use Graphael\Entity\Security\UsernameAuthorization;
+use Graphael\Security\SecurityFacade;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class UsernameVoter extends Voter
 {
-    public const USER_ROLE = 'USER_ROLE';
+    public const USER_ROLE = 'USERNAME_ACCESS_ROLE';
 
     protected function supports($attribute, $subject): bool
     {
@@ -19,6 +20,10 @@ class UsernameVoter extends Voter
     {
         assert($subject instanceof UsernameAuthorization);
         assert($attribute === static::USER_ROLE);
+
+        if ($token->getUsername() === SecurityFacade::ANONYMOUS_USER && empty($token->getCredentials())) {
+            return true;
+        }
 
         return $token->getUsername() === $subject->getAccessedUsername();
     }

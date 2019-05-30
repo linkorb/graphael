@@ -11,6 +11,7 @@ use Graphael\Security\SecurityFacade;
 use Graphael\Security\UserProvider\DefaultJwtDataMapper;
 use Graphael\Security\UserProvider\JwtDataMapperInterface;
 use Graphael\Security\UserProvider\JwtUserProvider;
+use Graphael\Server;
 use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
 use PDO;
@@ -30,13 +31,17 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\RoleHierarchyVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
+use Symfony\Component\Security\Core\Role\RoleHierarchy;
+use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class ContainerFactory
 {
     public const AUTH_VOTERS = 'auth_voters';
+    public const ROLE_HIERARCHY = 'role_hierarchy';
 
     public static function create($config)
     {
@@ -140,15 +145,10 @@ class ContainerFactory
         );
         $authenticationManager->addArgument([new Reference(JwtAuthProvider::class)]);
 
-        $accessDecisionManager = $container->register(
-            AccessDecisionManagerInterface::class,
-            AccessDecisionManager::class
-        );
-        // Will be defined in Kernel
-        $accessDecisionManager->addArgument(static::normalizedVoters($config[static::AUTH_VOTERS]));
-        $accessDecisionManager->addArgument(AccessDecisionManager::STRATEGY_UNANIMOUS);
-        $accessDecisionManager->addArgument(false);
-        $accessDecisionManager->addArgument(false);
+        $container->register(AccessDecisionManagerInterface::class, AccessDecisionManager::class)
+            ->addArgument(static::normalizedVoters($config[static::AUTH_VOTERS]))
+            ->addArgument(AccessDecisionManager::STRATEGY_AFFIRMATIVE)
+            ->addArgument(false);
 
         static::autoRegisterClass($container, SecurityFacade::class)
             ->setPublic(true);
@@ -158,6 +158,12 @@ class ContainerFactory
             ->setPublic(true);
 
         $container->register(RoleVoter::class, RoleVoter::class);
+        if ($config[static::ROLE_HIERARCHY]) {
+            $container->register(RoleHierarchyInterface::class, RoleHierarchy::class)
+                ->addArgument($config[static::ROLE_HIERARCHY]);
+            $container->register(RoleHierarchyVoter::class, RoleHierarchyVoter::class)
+                ->addArgument(new Reference(RoleHierarchyInterface::class));
+        }
         $container->register(UsernameVoter::class, UsernameVoter::class);
 
         $container->register(JwtCertManager::class, JwtCertManager::class)
@@ -205,10 +211,12 @@ class ContainerFactory
             'jwt_key' => null,
             'jwt_username_claim' => null,
             'jwt_roles_claim' => null,
+            Server::CONTEXT_ADMIN_ROLE_KEY => 'ROLE_ADMIN',
         ));
         $resolver->setAllowedTypes('jwt_key', ['string', 'null']);
         $resolver->setAllowedTypes('jwt_username_claim', ['string', 'null']);
         $resolver->setAllowedTypes('jwt_roles_claim', ['string', 'null']);
+        $resolver->setAllowedTypes(Server::CONTEXT_ADMIN_ROLE_KEY, ['string']);
         $resolver->setRequired('pdo_url');
 
         return $resolver->resolve($parameters);

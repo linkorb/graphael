@@ -12,13 +12,15 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 class Server extends StandardServer
 {
     public const CONTEXT_AUTHORIZATION_KEY = 'authorization';
+    public const CONTEXT_ADMIN_ROLE_KEY = 'admin_role';
 
     public function __construct(
         ObjectType $queryType,
         ObjectType $mutationType,
         callable $typeLoader,
         array $rootValue,
-        AuthorizationCheckerInterface $authorizationChecker
+        AuthorizationCheckerInterface $authorizationChecker,
+        string $adminRole
     )
     {
         $schema = new Schema(
@@ -36,6 +38,7 @@ class Server extends StandardServer
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
                 static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
+                static::CONTEXT_ADMIN_ROLE_KEY => $adminRole
             ],
         ];
 

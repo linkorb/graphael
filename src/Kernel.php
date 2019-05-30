@@ -85,7 +85,8 @@ class Kernel
                 return $container->get($className);
             },
             $rootValue,
-            $checker
+            $checker,
+            $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY)
         );
     }
 }
