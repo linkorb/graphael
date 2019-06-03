@@ -5,6 +5,7 @@ namespace Graphael;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
 use PDO;
+use PDOException;
 
 abstract class AbstractPdoObjectType extends ObjectType
 {
@@ -90,7 +91,7 @@ abstract class AbstractPdoObjectType extends ObjectType
         return $this->pdo->lastInsertId();
     }
 
-    public function update($keys, $values)
+    public function update($keys, $values): int
     {
         $where = $this->arrayToWhere($keys);
         $setters = $this->arrayToSetters($values);
@@ -101,7 +102,12 @@ abstract class AbstractPdoObjectType extends ObjectType
             $where
         );
         $statement = $this->pdo->prepare($sql);
-        $statement->execute(array_merge($values, $keys));
+
+        if (!$statement->execute(array_merge($values, $keys))) {
+            throw new PDOException('Wrong SQL query passed', 1);
+        }
+
+        return $statement->rowCount();
     }
 
     protected function count($keys)

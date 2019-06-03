@@ -60,11 +60,11 @@ class FieldResolver
             switch ($fieldConfig['convert']) {
                 case 'stampToIsoDateTime':
                     $date = new DateTime();
-                    $date->setTimestamp($property);
+                    $date->setTimestamp((int) $property);
                     return $date->format('Y-m-d\TH:i:s');
                 case 'stampToElapsed':
                     $date = new DateTime();
-                    $date->setTimestamp($property);
+                    $date->setTimestamp((int) $property);
                     $elapsed = new TimeElapsed($date);
                     return $elapsed->getElapsedTime();
                 case 'dateTimeToIsoDateTime':

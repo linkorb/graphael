@@ -78,6 +78,9 @@ class ContainerFactory
             ->addArgument($pdoDsn)
             ->addArgument($pdoConfig->getUsername())
             ->addArgument($pdoConfig->getPassword())
+            ->addArgument([
+                PDO::MYSQL_ATTR_FOUND_ROWS => true
+            ])
         ;
 
         // == register all GraphQL Types ===
