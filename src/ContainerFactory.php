@@ -43,6 +43,11 @@ class ContainerFactory
             ->addArgument($pdoDsn)
             ->addArgument($pdoConfig->getUsername())
             ->addArgument($pdoConfig->getPassword())
+            ->addArgument(
+                [
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
+                ]
+            )
         ;
 
         // == register all GraphQL Types ===
