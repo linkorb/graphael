@@ -78,7 +78,7 @@ class Server extends StandardServer
             try {
                 $token = (array)JWT::decode($jwt, $jwtKey, array('RS256'));
             } catch (\Exception $e) {
-                throw new RuntimeException("Token invalid");
+                throw new RuntimeException("Token invalid. ". $e->getMessage());
             }
             if (!$token) {
                 throw new RuntimeException("Invalid JWT");
@@ -87,11 +87,13 @@ class Server extends StandardServer
             if (isset($token['username'])) {
                 $rootValue['username'] = $token['username'];
             }
-            $rootValue['someRootValue'] = 'test';
         }
 
-        $typeNamespace = $container->getParameter('type_namespace');
-        $typePostfix = $container->getParameter('type_postfix');
+        $typeNamespace = $container->getParameter('type_class_namespace');
+        $typePostfix = 'Type';
+        if ($container->hasParameter('type_class_postfix')) {
+            $typePostfix = $container->getParameter('type_class_postfix');
+        }
         $schema = new Schema(
             [
                 'query' => $container->get($typeNamespace . '\QueryType'),

@@ -46,14 +46,15 @@ class ContainerFactory
         ;
 
         // == register all GraphQL Types ===
-        if (!isset($config['type_namespace'])) {
-            throw new RuntimeException("type_namespace not configured");
+        if (!isset($config['type_class_namespace'])) {
+            throw new RuntimeException("type_class_namespace not configured");
         }
-        if (!isset($config['type_path'])) {
-            throw new RuntimeException("type_path not configured");
+        if (!isset($config['type_class_path'])) {
+            throw new RuntimeException("type_class_path not configured");
         }
-        $ns = $config['type_namespace'];
-        $path = $config['type_path'];
+        $ns = $config['type_class_namespace'];
+        $path = $config['type_class_path'];
+
         if (!file_exists($path)) {
             throw new RuntimeException("Invalid type_path (not found)");
         }

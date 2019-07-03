@@ -3,6 +3,7 @@
 namespace Graphael;
 
 use Pwa\TimeElapsed;
+use RuntimeException;
 
 class FieldResolver
 {
@@ -28,6 +29,8 @@ class FieldResolver
             return $row;
         }
 
+
+
         if (isset($fieldConfig['list'])) {
             $value = $source[$fieldName];
             $listType = $fieldConfig['type']->getWrappedType();
@@ -35,6 +38,28 @@ class FieldResolver
             $res = $listType->{$listMethod}($value);
             if (!$res) {
                 $res = [];
+            }
+
+            return $res;
+        }
+
+        if (isset($fieldConfig['getAllBy'])) {
+            $value = $source[$fieldName];
+            $listType = $fieldConfig['type']->getWrappedType();
+            $res = $listType->getAllBy($fieldConfig['getAllBy'], $value);
+            if (!$res) {
+                $res = [];
+            }
+
+            return $res;
+        }
+
+        if (isset($fieldConfig['getBy'])) {
+            $value = $source[$fieldName];
+            $linkType = $fieldConfig['type'];
+            $res = $linkType->getBy($fieldConfig['getBy'], $value);
+            if (!$res) {
+                $res = null;
             }
 
             return $res;
@@ -56,6 +81,10 @@ class FieldResolver
                     $date = new \DateTime();
                     $date->setTimestamp($property);
                     return $date->format('Y-m-d\TH:i:s');
+                case 'stampToIsoDate':
+                    $date = new \DateTime();
+                    $date->setTimestamp($property);
+                    return $date->format('Y-m-d');
                 case 'stampToElapsed':
                     $date = new \DateTime();
                     $date->setTimestamp($property);
