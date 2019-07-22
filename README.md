@@ -33,9 +33,9 @@ if (file_exists($envFilename)) {
 // Application level configuration
 $config = [
     'environment_prefix' => 'MY_API_',
-    'type_class_namespace' => 'MyApi\\Type', //
-    'type_class_path' => __DIR__ . '/../src/Type' // Directory to scan for Type classes
-    'type_class_postfix' => 'Type',
+    'type_namespace' => 'MyApi\\Type', //
+    'type_path' => __DIR__ . '/../src/Type' // Directory to scan for Type classes
+    'type_postfix' => 'Type',
 ];
 
 // Instantiate a GraphQL server based on the configuration
@@ -48,9 +48,9 @@ $server->handleRequest();
 The server is being instantiated with a `$config` array that contains the following configuration options:
 
 * `environment_prefix`: Prefix of your environment config variables
-* `type_class_path`: Directory to scan for Type class files
-* `type_class_namespace`: Namespace of your Type classes. Should match PSR 4 namespace in your `composer.json`
-* `type_class_postfix`: Postfix of your type classes. Defaults to `Type`.
+* `type_path`: Directory to scan for Type class files
+* `type_namespace`: Namespace of your Type classes. Should match PSR 4 namespace in your `composer.json`
+* `type_postfix`: Postfix of your type classes. Defaults to `Type`.
 
 ### Environment configuration
 
