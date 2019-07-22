@@ -6,7 +6,6 @@ use DateTime;
 use RuntimeException;
 use GraphQL\Type\Definition\ResolveInfo;
 use Pwa\TimeElapsed;
-use RuntimeException;
 
 class FieldResolver
 {
