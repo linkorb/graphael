@@ -1,6 +1,6 @@
 <?php
 
-namespace Graphael;
+namespace Graphael\Services\DependencyInjection;
 
 interface TypeRegistryInterface
 {

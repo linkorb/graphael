@@ -1,18 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace Graphael;
+namespace Graphael\Services;
 
+use DateTime;
+use RuntimeException;
+use GraphQL\Type\Definition\ResolveInfo;
 use Pwa\TimeElapsed;
 use RuntimeException;
 
 class FieldResolver
 {
-    public function resolve($source, $args, $context, \GraphQL\Type\Definition\ResolveInfo $info)
+    public function resolve($source, $args, $context, ResolveInfo $info)
     {
         $fieldName = $info->fieldName;
         $property = null;
 
         $fieldConfig = $info->parentType->getField($fieldName)->config;
+
+        $authorize = isset($fieldConfig['authorize']) ? $fieldConfig['authorize'] : true;
+
         if (isset($fieldConfig['alias'])) {
             $fieldName = $fieldConfig['alias'];
         }
@@ -21,7 +27,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $linkType = $fieldConfig['type'];
             $linkMethod = $fieldConfig['link'];
-            $row = $linkType->{$linkMethod}($value);
+            $row = $linkType->{$linkMethod}($value, $context, $authorize);
             if (!$row) {
                 return null;
             }
@@ -35,7 +41,7 @@ class FieldResolver
             $value = $source[$fieldName];
             $listType = $fieldConfig['type']->getWrappedType();
             $listMethod = $fieldConfig['list'];
-            $res = $listType->{$listMethod}($value);
+            $res = $listType->{$listMethod}($value, $context, $authorize);
             if (!$res) {
                 $res = [];
             }
@@ -78,20 +84,20 @@ class FieldResolver
         if (isset($fieldConfig['convert']) && !empty($property)) {
             switch ($fieldConfig['convert']) {
                 case 'stampToIsoDateTime':
-                    $date = new \DateTime();
-                    $date->setTimestamp($property);
+                    $date = new DateTime();
+                    $date->setTimestamp((int) $property);
                     return $date->format('Y-m-d\TH:i:s');
                 case 'stampToIsoDate':
                     $date = new \DateTime();
                     $date->setTimestamp($property);
                     return $date->format('Y-m-d');
                 case 'stampToElapsed':
-                    $date = new \DateTime();
-                    $date->setTimestamp($property);
+                    $date = new DateTime();
+                    $date->setTimestamp((int) $property);
                     $elapsed = new TimeElapsed($date);
                     return $elapsed->getElapsedTime();
                 case 'dateTimeToIsoDateTime':
-                    $date = new \DateTime($property);
+                    $date = new DateTime($property);
                     return $date->format('Y-m-d\TH:i:s');
                 default:
                     throw new RuntimeException("Unsupported conversion: " . $fieldConfig['convert']);
