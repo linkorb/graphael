@@ -13,7 +13,7 @@ class JwtFactory
 {
     public const USERNAME_CLAIM_ID = 'username';
     public const ROLES_CLAIM_ID = 'roles';
-    public const DEFAULT_ROLE = 'AUTHENTICATED';
+    public const DEFAULT_ROLE = 'ROLE_AUTHENTICATED';
 
     private $usernameClaim = self::USERNAME_CLAIM_ID;
 
@@ -72,8 +72,8 @@ class JwtFactory
     private function extractRawJwt(Request $request): string
     {
         // try to extract JWT from HTTP headers
-        if ($request->headers->has('HTTP_X_AUTHORIZATION')) {
-            $auth = $request->headers->get('HTTP_X_AUTHORIZATION', '');
+        if ($request->headers->has('Authorization')) {
+            $auth = $request->headers->get('Authorization', '');
 
             $authPart = explode(' ', $auth);
 

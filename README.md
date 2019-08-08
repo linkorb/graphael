@@ -80,5 +80,5 @@ Supported environment variables:
 If the `JWT_KEY` environment variable is defined, the server checks for a JWT in one of two places:
 
 1. A `jwt` query parameter (i.e. `/graphql?jwt=abc.def.ghi`)
-2. A `X-Authorization` HTTP header (i.e. `X-Authorization: Bearer abc.def.ghi`)
+2. A `Authorization` HTTP header (i.e. `Authorization: Bearer abc.def.ghi`)
 
