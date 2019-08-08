@@ -215,11 +215,13 @@ class ContainerFactory
             'jwt_username_claim' => null,
             'jwt_roles_claim' => null,
             Server::CONTEXT_ADMIN_ROLE_KEY => 'ROLE_ADMIN',
+            'jwt_default_role' => null,
         ));
         $resolver->setAllowedTypes('jwt_key', ['string', 'null']);
         $resolver->setAllowedTypes('jwt_username_claim', ['string', 'null']);
         $resolver->setAllowedTypes('jwt_roles_claim', ['string', 'null']);
         $resolver->setAllowedTypes(Server::CONTEXT_ADMIN_ROLE_KEY, ['string']);
+        $resolver->setAllowedTypes('jwt_default_role', ['string']);
         $resolver->setRequired('pdo_url');
 
         return $resolver->resolve($parameters);

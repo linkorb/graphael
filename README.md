@@ -45,12 +45,17 @@ $server->handleRequest();
 
 ### Application configuration
 
-The server is being instantiated with a `$config` array that contains the following configuration options:
+The server is being instantiated with a `$config` array that contains the following configuration **required** options:
 
 * `environment_prefix`: Prefix of your environment config variables
 * `type_path`: Directory to scan for Type class files
 * `type_namespace`: Namespace of your Type classes. Should match PSR 4 namespace in your `composer.json`
 * `type_postfix`: Postfix of your type classes. Defaults to `Type`.
+
+And following **optional**:
+* `jwt_username_claim`: Claim in JWT that will be used to get username (*default*: `'username'`)
+* `jwt_roles_claim`: Claim in JWT for user roles (*default*: `'roles'`)
+* `jwt_default_role`: Default user role in case of absence `roles` claim (*default*: `'AUTHENTICATED'`)
 
 ### Environment configuration
 

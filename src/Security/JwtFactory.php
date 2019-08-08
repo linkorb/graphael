@@ -13,10 +13,13 @@ class JwtFactory
 {
     public const USERNAME_CLAIM_ID = 'username';
     public const ROLES_CLAIM_ID = 'roles';
+    public const DEFAULT_ROLE = 'AUTHENTICATED';
 
     private $usernameClaim = self::USERNAME_CLAIM_ID;
 
     private $rolesClaim = self::ROLES_CLAIM_ID;
+
+    private $defaultRole = self::DEFAULT_ROLE;
 
     public function createFromRequest(Request $request): TokenInterface
     {
@@ -30,11 +33,11 @@ class JwtFactory
 
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($jwtSegments[1]));
 
-        if (!$payload->{$this->rolesClaim} || !$payload->{$this->usernameClaim}) {
-            throw new AuthenticationException('Username and roles claims should both exists in JWT');
+        if (!$payload->{$this->usernameClaim}) {
+            throw new AuthenticationException('Username claim should exists in JWT');
         }
 
-        $token = new JsonWebToken($payload->{$this->rolesClaim}, $rawJwtString);
+        $token = new JsonWebToken($payload->{$this->rolesClaim} ?? [$this->defaultRole], $rawJwtString);
 
         if (empty($payload->{$this->usernameClaim})) {
             throw new AuthenticationException('No username claim passed in JWT');
@@ -55,6 +58,13 @@ class JwtFactory
     public function setRolesClaim(string $rolesClaim): self
     {
         $this->rolesClaim = $rolesClaim;
+
+        return $this;
+    }
+
+    public function setDefaultRole(string $defaultRole): self
+    {
+        $this->defaultRole = $defaultRole;
 
         return $this;
     }

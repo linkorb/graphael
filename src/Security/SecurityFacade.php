@@ -36,7 +36,8 @@ class SecurityFacade
         Request $request,
         bool $jwtEnabled,
         ?string $usernameClaim,
-        ?string $rolesClaim
+        ?string $rolesClaim,
+        ?string $defaultRole
     ): void
     {
         // Anonymous user means absence of jwt auth
@@ -57,6 +58,10 @@ class SecurityFacade
 
             if ($rolesClaim) {
                 $this->jwtFactory->setRolesClaim($rolesClaim);
+            }
+
+            if ($defaultRole) {
+                $this->jwtFactory->setDefaultRole($defaultRole);
             }
 
             $unauthenticatedToken = $this->jwtFactory->createFromRequest($request);
