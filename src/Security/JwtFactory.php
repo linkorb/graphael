@@ -3,6 +3,7 @@
 namespace Graphael\Security;
 
 use Firebase\JWT\JWT;
+use Graphael\Exception\OmittedJwtTokenException;
 use Graphael\Security\Token\JsonWebToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -78,7 +79,7 @@ class JwtFactory
             $authPart = explode(' ', $auth);
 
             if (count($authPart) !== 2) {
-                throw new AuthenticationException('Invalid authorization header');
+                throw new OmittedJwtTokenException('Invalid authorization header');
             }
 
             if ($authPart[0] !== 'Bearer') {
@@ -94,6 +95,6 @@ class JwtFactory
         }
 
         // jwt_key configured, but no jwt provided in request
-        throw new AuthenticationException('Token required');
+        throw new OmittedJwtTokenException('Token required');
     }
 }

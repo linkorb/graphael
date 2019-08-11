@@ -64,7 +64,8 @@ class Kernel
             (bool) $container->getParameter('jwt_key'),
             $container->getParameter('jwt_username_claim'),
             $container->getParameter('jwt_roles_claim'),
-            $container->getParameter('jwt_default_role')
+            $container->getParameter('jwt_default_role'),
+            $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY)
         );
 
         $typeNamespace = $container->getParameter('type_namespace');

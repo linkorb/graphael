@@ -24,6 +24,8 @@ use ReflectionClass;
 use RuntimeException;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\Security\Core\Authentication\AuthenticationProviderManager;
+use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolver;
+use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolverInterface;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -31,6 +33,7 @@ use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\AuthenticatedVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleHierarchyVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
@@ -168,6 +171,10 @@ class ContainerFactory
                 ->addArgument(new Reference(RoleHierarchyInterface::class));
         }
         $container->register(UsernameVoter::class, UsernameVoter::class);
+
+        static::autoRegisterClass($container, AuthenticationTrustResolver::class);
+        $container->setAlias(AuthenticationTrustResolverInterface::class, AuthenticationTrustResolver::class);
+        static::autoRegisterClass($container, AuthenticatedVoter::class);
 
         $container->register(JwtCertManager::class, JwtCertManager::class)
             ->addArgument($container->getParameter('jwt_key'));
