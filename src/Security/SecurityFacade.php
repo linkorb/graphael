@@ -3,9 +3,11 @@
 namespace Graphael\Security;
 
 use Exception;
+use Graphael\Exception\OmittedJwtTokenException;
 use Graphael\Security\Token\JsonWebToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\AnonymousToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
@@ -36,12 +38,14 @@ class SecurityFacade
         Request $request,
         bool $jwtEnabled,
         ?string $usernameClaim,
-        ?string $rolesClaim
+        ?string $rolesClaim,
+        ?string $defaultRole,
+        string $adminRole
     ): void
     {
-        // Anonymous user means absence of jwt auth
+        // Disabled jwt auth means admin role for every request
         if (!$jwtEnabled) {
-            $token = new JsonWebToken([]);
+            $token = new JsonWebToken([$adminRole]);
             $token->setUser(static::ANONYMOUS_USER);
             $token->setAuthenticated(true);
 
@@ -59,11 +63,20 @@ class SecurityFacade
                 $this->jwtFactory->setRolesClaim($rolesClaim);
             }
 
+            if ($defaultRole) {
+                $this->jwtFactory->setDefaultRole($defaultRole);
+            }
+
             $unauthenticatedToken = $this->jwtFactory->createFromRequest($request);
 
             $this->tokenStorage->setToken(
                 $this->authenticationManager->authenticate($unauthenticatedToken)
             );
+        } catch (OmittedJwtTokenException $e) {
+            $token = new AnonymousToken(uniqid(), static::ANONYMOUS_USER, []);
+            $token->setAuthenticated(true);
+
+            $this->tokenStorage->setToken($token);
         } catch (Exception $e) {
             throw new AuthenticationException('Token invalid', 0, $e);
         }

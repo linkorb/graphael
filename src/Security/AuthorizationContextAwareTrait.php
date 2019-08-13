@@ -10,12 +10,8 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 trait AuthorizationContextAwareTrait
 {
-    private function assertSameUsername(array $context, ?string $username, bool $authorize = true): void
+    private function assertSameUsername(array $context, ?string $username): void
     {
-        if (!$authorize) {
-            return;
-        }
-
         $this->assertGranted(
             $context,
             [UsernameVoter::USER_ROLE, $context[Server::CONTEXT_ADMIN_ROLE_KEY]],

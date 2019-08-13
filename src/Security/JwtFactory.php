@@ -3,6 +3,7 @@
 namespace Graphael\Security;
 
 use Firebase\JWT\JWT;
+use Graphael\Exception\OmittedJwtTokenException;
 use Graphael\Security\Token\JsonWebToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -13,10 +14,13 @@ class JwtFactory
 {
     public const USERNAME_CLAIM_ID = 'username';
     public const ROLES_CLAIM_ID = 'roles';
+    public const DEFAULT_ROLE = 'ROLE_AUTHENTICATED';
 
     private $usernameClaim = self::USERNAME_CLAIM_ID;
 
     private $rolesClaim = self::ROLES_CLAIM_ID;
+
+    private $defaultRole = self::DEFAULT_ROLE;
 
     public function createFromRequest(Request $request): TokenInterface
     {
@@ -30,11 +34,11 @@ class JwtFactory
 
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($jwtSegments[1]));
 
-        if (!$payload->{$this->rolesClaim} || !$payload->{$this->usernameClaim}) {
-            throw new AuthenticationException('Username and roles claims should both exists in JWT');
+        if (!$payload->{$this->usernameClaim}) {
+            throw new AuthenticationException('Username claim should exists in JWT');
         }
 
-        $token = new JsonWebToken($payload->{$this->rolesClaim}, $rawJwtString);
+        $token = new JsonWebToken($payload->{$this->rolesClaim} ?? [$this->defaultRole], $rawJwtString);
 
         if (empty($payload->{$this->usernameClaim})) {
             throw new AuthenticationException('No username claim passed in JWT');
@@ -59,16 +63,23 @@ class JwtFactory
         return $this;
     }
 
+    public function setDefaultRole(string $defaultRole): self
+    {
+        $this->defaultRole = $defaultRole;
+
+        return $this;
+    }
+
     private function extractRawJwt(Request $request): string
     {
         // try to extract JWT from HTTP headers
-        if ($request->headers->has('HTTP_X_AUTHORIZATION')) {
-            $auth = $request->headers->get('HTTP_X_AUTHORIZATION', '');
+        if ($request->headers->has('Authorization')) {
+            $auth = $request->headers->get('Authorization', '');
 
             $authPart = explode(' ', $auth);
 
             if (count($authPart) !== 2) {
-                throw new AuthenticationException('Invalid authorization header');
+                throw new OmittedJwtTokenException('Invalid authorization header');
             }
 
             if ($authPart[0] !== 'Bearer') {
@@ -84,6 +95,6 @@ class JwtFactory
         }
 
         // jwt_key configured, but no jwt provided in request
-        throw new AuthenticationException('Token required');
+        throw new OmittedJwtTokenException('Token required');
     }
 }
