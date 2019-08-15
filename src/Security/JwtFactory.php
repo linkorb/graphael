@@ -73,8 +73,9 @@ class JwtFactory
     private function extractRawJwt(Request $request): string
     {
         // try to extract JWT from HTTP headers
-        if ($request->headers->has('Authorization')) {
-            $auth = $request->headers->get('Authorization', '');
+        // Using `X-Authorization`, as `Authorization` gets lost in an apache2 proxypass
+        if ($request->headers->has('X-Authorization')) {
+            $auth = $request->headers->get('X-Authorization', '');
 
             $authPart = explode(' ', $auth);
 
@@ -85,7 +86,6 @@ class JwtFactory
             if ($authPart[0] !== 'Bearer') {
                 throw new AuthenticationException('Invalid authorization type');
             }
-
             return end($authPart);
         }
 
