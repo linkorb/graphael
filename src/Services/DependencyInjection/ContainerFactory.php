@@ -111,7 +111,7 @@ class ContainerFactory
             if (!is_array(class_implements($className))) {
                 throw new RuntimeException("Can't register class (failed to load, or does not implement anything): " . $className);
             }
-            if (in_array('GraphQL\\Type\\Definition\\OutputType', class_implements($className))) {
+            if (is_subclass_of($className, 'GraphQL\\Type\\Definition\\Type')) {
                 self::autoRegisterClass($container, $className)
                     ->setPublic(true);
             }
