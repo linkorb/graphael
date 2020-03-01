@@ -38,7 +38,11 @@ class JwtFactory
             throw new AuthenticationException('Username claim should exists in JWT');
         }
 
-        $token = new JsonWebToken($payload->{$this->rolesClaim} ?? [$this->defaultRole], $rawJwtString);
+        $roles = $payload->{$this->rolesClaim} ?? [$this->defaultRole];
+        if (is_string($roles)) {
+            $roles = explode(",", $roles);
+        }
+        $token = new JsonWebToken($roles, $rawJwtString);
 
         if (empty($payload->{$this->usernameClaim})) {
             throw new AuthenticationException('No username claim passed in JWT');
