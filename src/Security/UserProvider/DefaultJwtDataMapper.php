@@ -17,6 +17,28 @@ class DefaultJwtDataMapper implements JwtDataMapperInterface
         return 'user_data';
     }
 
+    public function getInsertSql(): string
+    {
+        $sql = sprintf(
+            'INSERT INTO
+                `%s`
+                (%s, display_name, first_stamp, created_at)
+                VALUES (:username, :displayName, :now, :now)',
+            $this->getUserTable(),
+            $this->getUsernameProperty()
+        );
+        return $sql;
+    }
+
+    public function getInsertKeys(): array
+    {
+        return [
+            ':username',
+            ':now',
+            ':displayName',
+        ];
+    }
+
     public function map(array $object): UserInterface
     {
         return new User($object[$this->getUsernameProperty()], null);
