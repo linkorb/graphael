@@ -12,7 +12,7 @@
     }
   ],
   "require": {
-    "php": "7.2.*",
+    "php": "^7.2",
     "symfony/options-resolver": "~3.0",
     "symfony/dependency-injection": "~3.3",
     "webonyx/graphql-php": "^0.11.2",
