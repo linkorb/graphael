@@ -20,9 +20,9 @@ class Server extends StandardServer
         callable $typeLoader,
         array $rootValue,
         AuthorizationCheckerInterface $authorizationChecker,
-        string $adminRole
-    )
-    {
+        string $adminRole,
+        int $debugFlag = 0
+    ) {
         $schema = new Schema(
             [
                 'query' => $queryType,
@@ -31,14 +31,16 @@ class Server extends StandardServer
             ]
         );
 
+        $debug = ($debugFlag) ? Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE : $debugFlag;
+
         $config = [
             'schema' => $schema,
-            'debug' => Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE,
+            'debug' => $debug,
             'rootValue' => $rootValue,
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
                 static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
-                static::CONTEXT_ADMIN_ROLE_KEY => $adminRole
+                static::CONTEXT_ADMIN_ROLE_KEY => $adminRole,
             ],
         ];
 

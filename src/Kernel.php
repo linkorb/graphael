@@ -88,6 +88,8 @@ class Kernel
             },
             $rootValue,
             $checker,
+            $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY),
+            $container->hasParameter('debugFlag') ? $container->getParameter('debugFlag') : 0
             $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY)
         );
     }
