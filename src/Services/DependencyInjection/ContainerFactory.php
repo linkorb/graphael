@@ -40,6 +40,10 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchy;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Spark\Spark;
+use Spark\EventDispatcher\SparkEventDispatcherV4;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class ContainerFactory
 {
@@ -84,6 +88,19 @@ class ContainerFactory
             ->addArgument([
                 PDO::MYSQL_ATTR_FOUND_ROWS => true
             ])
+        ;
+
+
+        $spark = Spark::getInstance();
+        $container->set(Spark::class, $spark);
+
+        $dispatcher = new EventDispatcher();
+        $container->register(
+                EventDispatcherInterface::class,
+                SparkEventDispatcherV4::class
+            )
+            ->addArgument($dispatcher)
+            ->addArgument($spark)
         ;
 
         // == register all GraphQL Types ===
