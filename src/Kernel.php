@@ -14,7 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Spark\Spark;
 
 /**
  * Responsible for services instantiation & configuration
@@ -28,8 +27,6 @@ class Kernel
 
     /** @var StandardServer */
     private $server;
-
-    protected $spark;
 
     public function __construct(array $serverConfig)
     {
@@ -83,16 +80,53 @@ class Kernel
         $container = $this->boot($this->serverConfig);
         $this->initialize($container);
 
+        $logger = null;
+        if (isset($this->serverConfig[ContainerFactory::LOGGER])) {
+            $logger = $container->get(
+                $this->serverConfig[ContainerFactory::LOGGER]
+            );
+        }
+
         $result = $this->server->executeRequest(); // ExecutionResult
         $httpStatus = $this->resolveHttpStatus($result);
+
+        if (count($logger->getHandlers())>0) {
+            $result->setErrorsHandler(function($errors) use ($logger) {
+                foreach ($errors as $error) {
+                    $json = json_encode($error, JSON_UNESCAPED_SLASHES);
+                    $data = [
+                        'event' => [
+                            'action' => 'graphael:error',
+                        ],
+                        'log' => [
+                            'level' => 'error',
+                            'original' => json_encode(['error' => $json], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                        ],
+                    ];
+                    $logger->error($error->getMessage() ?? 'Execution Error', $data);
+                }
+                return array_map('GraphQL\Error\FormattedError::createFromException', $errors);
+            });
+        }
         $data = $result->toArray();
         $json = json_encode($data, JSON_UNESCAPED_SLASHES);
         $response = new Response($json, $httpStatus);
         header('Content-Type: application/json', true, $httpStatus);
         echo $json;
-        $spark = $container->get(Spark::class);
-        $spark->getTransaction()->setHttpResponse($response);
-        $spark->report();
+
+        if ($httpStatus!=200) {
+            $data = [
+                'event' => [
+                    'action' => 'graphael:error',
+                ],
+                'log' => [
+                    'level' => 'error',
+                    'original' => 'HTTP' . $httpStatus . ': ' . json_encode(['error' => $json], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+                ],
+            ];
+            $logger->error('HTTP Error', $data);
+        }
+
     }
 
     private function boot(array $config): ContainerInterface
@@ -113,8 +147,15 @@ class Kernel
         $rootValue = [];
 
         $request = Request::createFromGlobals();
-        $spark = $container->get(\Spark\Spark::class);
-        $spark->getTransaction()->setHttpRequest($request);
+        $container->set(Request::class, $request);
+
+        if (isset($this->serverConfig[ContainerFactory::LOGGER])) {
+            $errorHandler->setLogger(
+                $container->get(
+                    $this->serverConfig[ContainerFactory::LOGGER]
+                )
+            );
+        }
 
         /** @var SecurityFacade $securityFacade */
         $securityFacade = $container->get(SecurityFacade::class);
@@ -147,7 +188,8 @@ class Kernel
             },
             $rootValue,
             $checker,
-            $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY)
+            $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY),
+            $request
         );
     }
 }

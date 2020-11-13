@@ -40,15 +40,13 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Component\Security\Core\Role\RoleHierarchy;
 use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Spark\Spark;
-use Spark\EventDispatcher\SparkEventDispatcherV4;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class ContainerFactory
 {
     public const AUTH_VOTERS = 'auth_voters';
     public const ROLE_HIERARCHY = 'role_hierarchy';
+    public const POST_CONTAINER_BUILDER = 'post_container_builder'; // Allow Graphael consumers to append their own container builder
+    public const LOGGER = 'logger';
 
     public static function create($config)
     {
@@ -90,19 +88,6 @@ class ContainerFactory
             ])
         ;
 
-
-        $spark = Spark::getInstance();
-        $container->set(Spark::class, $spark);
-
-        $dispatcher = new EventDispatcher();
-        $container->register(
-                EventDispatcherInterface::class,
-                SparkEventDispatcherV4::class
-            )
-            ->addArgument($dispatcher)
-            ->addArgument($spark)
-        ;
-
         // == register all GraphQL Types ===
         if (!isset($config['type_namespace'])) {
             throw new RuntimeException("type_namespace not configured");
@@ -133,6 +118,10 @@ class ContainerFactory
                     ->setPublic(true);
             }
         }
+        if (isset($config[self::POST_CONTAINER_BUILDER])) {
+            $postContainerBuilder = new $config[self::POST_CONTAINER_BUILDER]();
+            $postContainerBuilder->build($container);
+        }
 
         return $container;
 
@@ -160,7 +149,8 @@ class ContainerFactory
 
         $container->setAlias(AuthenticationProviderInterface::class, JwtAuthProvider::class);
 
-        $container->register(TokenStorageInterface::class, TokenStorage::class);
+        $container->register(TokenStorageInterface::class, TokenStorage::class)
+            ->setPublic(true);
 
         $authenticationManager = $container->register(
             AuthenticationManagerInterface::class,

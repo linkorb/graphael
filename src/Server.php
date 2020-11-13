@@ -13,6 +13,7 @@ class Server extends StandardServer
 {
     public const CONTEXT_AUTHORIZATION_KEY = 'authorization';
     public const CONTEXT_ADMIN_ROLE_KEY = 'admin_role';
+    public const CONTEXT_IP_KEY = 'ip';
 
     public function __construct(
         ObjectType $queryType,
@@ -20,7 +21,8 @@ class Server extends StandardServer
         callable $typeLoader,
         array $rootValue,
         AuthorizationCheckerInterface $authorizationChecker,
-        string $adminRole
+        string $adminRole,
+        $request
     )
     {
         $schema = new Schema(
@@ -38,9 +40,11 @@ class Server extends StandardServer
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
                 static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
-                static::CONTEXT_ADMIN_ROLE_KEY => $adminRole
+                static::CONTEXT_ADMIN_ROLE_KEY => $adminRole,
+                static::CONTEXT_IP_KEY => $request->getClientIp(),
             ],
         ];
+
 
         parent::__construct($config);
     }
