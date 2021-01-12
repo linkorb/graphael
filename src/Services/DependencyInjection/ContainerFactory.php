@@ -62,6 +62,27 @@ class ContainerFactory
             $container->setParameter($key, $value);
         }
 
+        $cacheDriverType = $container->getParameter('cache_driver') ?? null;
+        switch ($cacheDriverType) {
+            case 'file':
+                $cachePath = $container->getParameter('cache_driver_file_path');
+                $container
+                    ->register(\Doctrine\Common\Cache\Cache::class, \Doctrine\Common\Cache\PhpFileCache::class)
+                    ->addArgument($cachePath)
+                ;
+                break;
+            case ''; // default unconfigured to array
+            case 'array':
+                $container
+                    ->register(\Doctrine\Common\Cache\Cache::class, \Doctrine\Common\Cache\ArrayCache::class)
+                ;
+                break;
+            default:
+                throw new RuntimeException("Unsupported or unconfigured cache driver: " . $cacheDriverType);
+        }
+
+
+
         if (file_exists($container->getParameter('jwt_key'))) {
             $jwtKey = file_get_contents($container->getParameter('jwt_key'));
             $container->setParameter('jwt_key', $jwtKey);
@@ -230,6 +251,8 @@ class ContainerFactory
             'jwt_roles_claim' => null,
             Server::CONTEXT_ADMIN_ROLE_KEY => 'ROLE_ADMIN',
             'jwt_default_role' => null,
+            'cache_driver' => null,
+            'cache_driver_file_path' => null,
         ));
         $resolver->setAllowedTypes('jwt_key', ['string', 'null']);
         $resolver->setAllowedTypes('jwt_username_claim', ['string', 'null']);
