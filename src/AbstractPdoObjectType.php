@@ -21,9 +21,14 @@ abstract class AbstractPdoObjectType extends ObjectType
     // TODO: rename to getOneBy
     public function getBy($key, $value)
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM ' . $this->tableName . ' WHERE ' . $key . ' = :value');
-        $result = $stmt->execute(['value'=>$value]);
-        return $this->processRow($stmt->fetch(PDO::FETCH_ASSOC));
+        $stmt = $this->pdo->prepare('SELECT * FROM '.$this->tableName.' WHERE '.$key.' = :value');
+        $stmt->execute(['value' => $value]);
+
+        if ($result = $this->processRow($stmt->fetch(PDO::FETCH_ASSOC))) {
+            return $result;
+        }
+
+        return null;
     }
 
     public function getAllBy($key, $value)
