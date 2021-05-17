@@ -75,10 +75,10 @@ class Kernel
     }
 
 
-    public function run(): void
+    public function run(Request $request): Response
     {
         $container = $this->boot($this->serverConfig);
-        $this->initialize($container);
+        $this->initialize($container, $request);
 
         $logger = null;
         if (isset($this->serverConfig[ContainerFactory::LOGGER])) {
@@ -111,8 +111,6 @@ class Kernel
         $data = $result->toArray();
         $json = json_encode($data, JSON_UNESCAPED_SLASHES);
         $response = new Response($json, $httpStatus);
-        header('Content-Type: application/json', true, $httpStatus);
-        echo $json;
 
         if ($httpStatus!=200) {
             $data = [
@@ -127,6 +125,7 @@ class Kernel
             $logger->error('HTTP Error', $data);
         }
 
+        return $response;
     }
 
     private function boot(array $config): ContainerInterface
@@ -138,7 +137,7 @@ class Kernel
         return $container;
     }
 
-    private function initialize(ContainerInterface $container): void
+    private function initialize(ContainerInterface $container, Request $request): void
     {
         /** @var ErrorHandlerInterface $errorHandler */
         $errorHandler = $container->get(ErrorHandlerInterface::class);
@@ -146,7 +145,6 @@ class Kernel
 
         $rootValue = [];
 
-        $request = Request::createFromGlobals();
         $container->set(Request::class, $request);
 
         if (isset($this->serverConfig[ContainerFactory::LOGGER])) {
