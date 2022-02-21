@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Graphael\Security;
 
@@ -10,7 +12,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 trait AuthorizationContextAwareTrait
 {
-    private function assertSameUsername(array $context, ?string $username): void
+    protected function assertSameUsername(array $context, ?string $username): void
     {
         $this->assertGranted(
             $context,
@@ -20,13 +22,12 @@ trait AuthorizationContextAwareTrait
         );
     }
 
-    private function assertGranted(
+    protected function assertGranted(
         array $context,
         array $attributes,
         $subject = null,
         string $deniedMessage = 'Access Denied.'
-    ): void
-    {
+    ): void {
         $checker = $context[Server::CONTEXT_AUTHORIZATION_KEY];
 
         assert($checker instanceof AuthorizationCheckerInterface);
