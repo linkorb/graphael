@@ -2,6 +2,7 @@
 
 namespace Graphael\Services\DependencyInjection;
 
+use Connector\Connector;
 use Graphael\Security\Authorization\UsernameVoter;
 use Graphael\Security\JwtCertManager\JwtCertManager;
 use Graphael\Security\JwtCertManager\JwtCertManagerInterface;
@@ -14,15 +15,10 @@ use Graphael\Security\UserProvider\JwtUserProvider;
 use Graphael\Server;
 use Graphael\Services\Error\ErrorHandler;
 use Graphael\Services\Error\ErrorHandlerInterface;
-use PDO;
-use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
-use Connector\Connector;
-use ReflectionClass;
-use RuntimeException;
-use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authentication\AuthenticationProviderManager;
 use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolver;
 use Symfony\Component\Security\Core\Authentication\AuthenticationTrustResolverInterface;
@@ -173,15 +169,22 @@ class ContainerFactory
         $container->register(TokenStorageInterface::class, TokenStorage::class)
             ->setPublic(true);
 
+        /*
         $authenticationManager = $container->register(
             AuthenticationManagerInterface::class,
             AuthenticationProviderManager::class
         );
+        */
+        $authenticationManager = $container->register(
+            AuthenticationTrustResolverInterface::class,
+            AuthenticationTrustResolver::class
+        );
+
         $authenticationManager->addArgument([new Reference(JwtAuthProvider::class)]);
 
         $container->register(AccessDecisionManagerInterface::class, AccessDecisionManager::class)
             ->addArgument(static::normalizedVoters($config[static::AUTH_VOTERS]))
-            ->addArgument(AccessDecisionManager::STRATEGY_AFFIRMATIVE)
+          //  ->addArgument(AccessDecisionManager::STRATEGY_AFFIRMATIVE)
             ->addArgument(false);
 
         static::autoRegisterClass($container, SecurityFacade::class)
@@ -269,8 +272,29 @@ class ContainerFactory
         $reflectionClass = new ReflectionClass($className);
         $constructor = $reflectionClass->getConstructor();
         $definition = $container->register($className, $className);
+
+        /*
+        if (!$constructor) {
+            var_dump($className);
+            exit;
+        }
+        */
+
+        if (!$constructor) {
+            // $reflectionClass = $reflectionClass->gettype();
+            if ($reflectionClass) {
+                $definition->addArgument($reflectionClass->getName());
+            }
+
+            return $definition;
+        }
+
         foreach ($constructor->getParameters() as $p) {
-            $reflectionClass = $p->getClass();
+            // $reflectionClass = $p->getClass();
+
+            $reflectionClass = $p->getType() && !$p->getType()->isBuiltin()
+                                ? new \ReflectionClass($p->getType()->getName())
+                                : null;
             if ($reflectionClass) {
                 $definition->addArgument(new Reference($reflectionClass->getName()));
             }

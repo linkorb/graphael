@@ -3,10 +3,10 @@
 namespace Graphael;
 
 use Graphael\Services\FieldResolver;
+use GraphQL\Error\DebugFlag;
 use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
-use GraphQL\Error\Debug;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class Server extends StandardServer
@@ -23,8 +23,7 @@ class Server extends StandardServer
         AuthorizationCheckerInterface $authorizationChecker,
         string $adminRole,
         $request
-    )
-    {
+    ) {
         $schema = new Schema(
             [
                 'query' => $queryType,
@@ -35,7 +34,7 @@ class Server extends StandardServer
 
         $config = [
             'schema' => $schema,
-            'debug' => Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE,
+            'debugFlag' => DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE,
             'rootValue' => $rootValue,
             'fieldResolver' => [new FieldResolver(), 'resolve'],
             'context' => [
@@ -44,7 +43,6 @@ class Server extends StandardServer
                 static::CONTEXT_IP_KEY => $request->getClientIp(),
             ],
         ];
-
 
         parent::__construct($config);
     }
