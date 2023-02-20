@@ -169,12 +169,6 @@ class ContainerFactory
         $container->register(TokenStorageInterface::class, TokenStorage::class)
             ->setPublic(true);
 
-        /*
-        $authenticationManager = $container->register(
-            AuthenticationManagerInterface::class,
-            AuthenticationProviderManager::class
-        );
-        */
         $authenticationManager = $container->register(
             AuthenticationTrustResolverInterface::class,
             AuthenticationTrustResolver::class
@@ -184,7 +178,7 @@ class ContainerFactory
 
         $container->register(AccessDecisionManagerInterface::class, AccessDecisionManager::class)
             ->addArgument(static::normalizedVoters($config[static::AUTH_VOTERS]))
-          //  ->addArgument(AccessDecisionManager::STRATEGY_AFFIRMATIVE)
+            ->addArgument(AccessDecisionManager::STRATEGY_AFFIRMATIVE)
             ->addArgument(false);
 
         static::autoRegisterClass($container, SecurityFacade::class)
@@ -272,22 +266,6 @@ class ContainerFactory
         $reflectionClass = new ReflectionClass($className);
         $constructor = $reflectionClass->getConstructor();
         $definition = $container->register($className, $className);
-
-        /*
-        if (!$constructor) {
-            var_dump($className);
-            exit;
-        }
-        */
-
-        if (!$constructor) {
-            // $reflectionClass = $reflectionClass->gettype();
-            if ($reflectionClass) {
-                $definition->addArgument($reflectionClass->getName());
-            }
-
-            return $definition;
-        }
 
         foreach ($constructor->getParameters() as $p) {
             // $reflectionClass = $p->getClass();
