@@ -103,6 +103,11 @@ class FieldResolver
             }
         }
 
+        if (!empty($fieldConfig['sanitize'])) {
+            $value = $property ?? '';
+            return htmlspecialchars($value);
+        }
+
         return $property instanceof \Closure ? $property($source, $args, $context) : $property;
     }
 }
