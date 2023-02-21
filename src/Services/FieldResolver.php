@@ -105,7 +105,7 @@ class FieldResolver
 
         if (!empty($fieldConfig['sanitize'])) {
             $value = $property ?? '';
-            $property = htmlspecialchars($value);
+            return htmlspecialchars($value);
         }
 
         return $property instanceof \Closure ? $property($source, $args, $context) : $property;
