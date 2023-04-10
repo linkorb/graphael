@@ -147,12 +147,12 @@ class Kernel
 
         $container->set(Request::class, $request);
 
+        $logger = null;
         if (isset($this->serverConfig[ContainerFactory::LOGGER])) {
-            $errorHandler->setLogger(
-                $container->get(
-                    $this->serverConfig[ContainerFactory::LOGGER]
-                )
+            $logger = $container->get(
+                $this->serverConfig[ContainerFactory::LOGGER]
             );
+            $errorHandler->setLogger($logger);
         }
 
         /** @var SecurityFacade $securityFacade */
@@ -187,7 +187,8 @@ class Kernel
             $rootValue,
             $checker,
             $container->getParameter(Server::CONTEXT_ADMIN_ROLE_KEY),
-            $request
+            $request,
+            new FieldResolver($logger)
         );
     }
 }

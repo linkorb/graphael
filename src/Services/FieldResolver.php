@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace Graphael\Services;
 
 use GraphQL\Type\Definition\ResolveInfo;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
+use Plaza\Api\Logger\EventLogger;
 use Pwa\TimeElapsed;
 
 class FieldResolver
 {
+    private $eventLogger;
+
+    public function __construct(EventLogger $eventLogger)
+    {
+        $this->eventLogger = $eventLogger;
+    }
+
     public function resolve($source, $args, $context, ResolveInfo $info)
     {
         $fieldName = $info->fieldName;
@@ -26,10 +32,7 @@ class FieldResolver
 
         if (!empty($fieldConfig['tripwire'])) {
             $typeName = ucfirst($info->path[0]).'Type';
-
-            $log = new Logger('tripwire');
-            $log->pushHandler(new StreamHandler(getenv('TRIPWIRE_LOG')));
-            $log->critical('Tripwire trigged:'.$typeName.'.'.$fieldName);
+            $this->eventLogger->critical('Tripwire trigged:'.$typeName.'.'.$fieldName);
 
             return null;
         }
