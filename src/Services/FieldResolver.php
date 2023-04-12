@@ -1,14 +1,22 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Graphael\Services;
 
-use DateTime;
-use RuntimeException;
 use GraphQL\Type\Definition\ResolveInfo;
+use Plaza\Api\Logger\EventLogger;
 use Pwa\TimeElapsed;
 
 class FieldResolver
 {
+    private $eventLogger;
+
+    public function __construct(EventLogger $eventLogger)
+    {
+        $this->eventLogger = $eventLogger;
+    }
+
     public function resolve($source, $args, $context, ResolveInfo $info)
     {
         $fieldName = $info->fieldName;
@@ -22,6 +30,13 @@ class FieldResolver
             $fieldName = $fieldConfig['alias'];
         }
 
+        if (!empty($fieldConfig['tripwire'])) {
+            $typeName = ucfirst($info->path[0]).'Type';
+            $this->eventLogger->critical('Tripwire trigged:'.$typeName.'.'.$fieldName);
+
+            return null;
+        }
+
         if (isset($fieldConfig['link'])) {
             $value = $source[$fieldName];
             $linkType = $fieldConfig['type'];
@@ -33,8 +48,6 @@ class FieldResolver
 
             return $row;
         }
-
-
 
         if (isset($fieldConfig['list'])) {
             $value = $source[$fieldName];
@@ -83,28 +96,33 @@ class FieldResolver
         if (isset($fieldConfig['convert']) && !empty($property)) {
             switch ($fieldConfig['convert']) {
                 case 'stampToIsoDateTime':
-                    $date = new DateTime();
+                    $date = new \DateTime();
                     $date->setTimestamp((int) $property);
+
                     return $date->format('Y-m-d\TH:i:s');
                 case 'stampToIsoDate':
                     $date = new \DateTime();
                     $date->setTimestamp($property);
+
                     return $date->format('Y-m-d');
                 case 'stampToElapsed':
-                    $date = new DateTime();
+                    $date = new \DateTime();
                     $date->setTimestamp((int) $property);
                     $elapsed = new TimeElapsed($date);
+
                     return $elapsed->getElapsedTime();
                 case 'dateTimeToIsoDateTime':
-                    $date = new DateTime($property);
+                    $date = new \DateTime($property);
+
                     return $date->format('Y-m-d\TH:i:s');
                 default:
-                    throw new RuntimeException("Unsupported conversion: " . $fieldConfig['convert']);
+                    throw new \RuntimeException('Unsupported conversion: '.$fieldConfig['convert']);
             }
         }
 
         if (!empty($fieldConfig['sanitize'])) {
             $value = $property ?? '';
+
             return htmlspecialchars($value);
         }
 
