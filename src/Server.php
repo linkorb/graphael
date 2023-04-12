@@ -23,7 +23,7 @@ class Server extends StandardServer
         AuthorizationCheckerInterface $authorizationChecker,
         string $adminRole,
         $request,
-        $resolve
+        $resolver
     ) {
         $schema = new Schema(
             [
@@ -37,7 +37,7 @@ class Server extends StandardServer
             'schema' => $schema,
             'debug' => Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE,
             'rootValue' => $rootValue,
-            'fieldResolver' => [$resolve, 'resolve'],
+            'fieldResolver' => [$resolver, 'resolve'],
             'context' => [
                 static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
                 static::CONTEXT_ADMIN_ROLE_KEY => $adminRole,
