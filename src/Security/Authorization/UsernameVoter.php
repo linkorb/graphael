@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security\Authorization;
+namespace LinkORB\GraphaelBundle\Security\Authorization;
 
-use Graphael\Entity\Security\UsernameAuthorization;
+use LinkORB\GraphaelBundle\Entity\Security\UsernameAuthorization;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -20,6 +20,6 @@ class UsernameVoter extends Voter
         assert($subject instanceof UsernameAuthorization);
         assert($attribute === static::USER_ROLE);
 
-        return $token->getUsername() === $subject->getAccessedUsername();
+        return $token->getUser()->getUserIdentifier() === $subject->getAccessedUsername();
     }
 }

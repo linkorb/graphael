@@ -1,12 +1,12 @@
 <?php
 
-namespace Graphael;
+namespace LinkORB\GraphaelBundle\Services;
 
-use Graphael\Services\FieldResolver;
+use GraphQL\Error\DebugFlag;
 use GraphQL\Server\StandardServer;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Schema;
-use GraphQL\Error\Debug;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class Server extends StandardServer
@@ -22,7 +22,7 @@ class Server extends StandardServer
         array $rootValue,
         AuthorizationCheckerInterface $authorizationChecker,
         string $adminRole,
-        $request,
+        RequestStack $requestStack,
         $resolver
     ) {
         $schema = new Schema(
@@ -35,13 +35,13 @@ class Server extends StandardServer
 
         $config = [
             'schema' => $schema,
-            'debug' => Debug::INCLUDE_DEBUG_MESSAGE | Debug::INCLUDE_TRACE,
+            'debugFlag' => DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE,
             'rootValue' => $rootValue,
             'fieldResolver' => [$resolver, 'resolve'],
             'context' => [
                 static::CONTEXT_AUTHORIZATION_KEY => $authorizationChecker,
                 static::CONTEXT_ADMIN_ROLE_KEY => $adminRole,
-                static::CONTEXT_IP_KEY => $request->getClientIp(),
+                static::CONTEXT_IP_KEY => $requestStack->getCurrentRequest()->getClientIp(),
             ],
         ];
 

@@ -1,16 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security\JwtCertManager;
+namespace LinkORB\GraphaelBundle\Security\JwtCertManager;
 
 class JwtCertManager implements JwtCertManagerInterface
 {
-    /** @var string */
-    private $publicCert;
-
-    public function __construct(string $publicCert)
-    {
-        $this->publicCert = $publicCert;
-    }
+    public function __construct(
+        private string $publicCert,
+    ) {}
 
     public function getPublicCertificate(string $username): string
     {

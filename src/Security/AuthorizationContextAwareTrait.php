@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Graphael\Security;
+namespace LinkORB\GraphaelBundle\Security;
 
-use Graphael\Entity\Security\UsernameAuthorization;
-use Graphael\Security\Authorization\UsernameVoter;
-use Graphael\Server;
+use LinkORB\GraphaelBundle\Entity\Security\UsernameAuthorization;
+use LinkORB\GraphaelBundle\Security\Authorization\UsernameVoter;
+use LinkORB\GraphaelBundle\Services\Server;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 

@@ -1,8 +1,7 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security\UserProvider;
+namespace LinkORB\GraphaelBundle\Security\UserProvider;
 
-use Symfony\Component\Security\Core\User\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class DefaultJwtDataMapper implements JwtDataMapperInterface
@@ -41,6 +40,6 @@ class DefaultJwtDataMapper implements JwtDataMapperInterface
 
     public function map(array $object): UserInterface
     {
-        return new User($object[$this->getUsernameProperty()], null);
+        return new User($object[$this->getUsernameProperty()], null, []);
     }
 }

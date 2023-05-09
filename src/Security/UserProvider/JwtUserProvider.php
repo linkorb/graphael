@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security\UserProvider;
+namespace LinkORB\GraphaelBundle\Security\UserProvider;
 
 use PDO;
 use RuntimeException;
@@ -21,14 +21,14 @@ class JwtUserProvider implements UserProviderInterface
         $this->dataMapper = $dataMapper;
     }
 
-    public function loadUserByUsername($username): UserInterface
+    public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        return $this->getUser($username);
+        return $this->getUser($identifier);
     }
 
     public function refreshUser(UserInterface $user): UserInterface
     {
-        return $this->getUser($user->getUsername());
+        return $this->getUser($user->getUserIdentifier());
     }
 
     public function supportsClass($class): bool
@@ -79,10 +79,10 @@ class JwtUserProvider implements UserProviderInterface
                 $this->dataMapper->getUserTable(),
                 $this->dataMapper->getUsernameProperty()
             );
-    
+
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([':username' => $username]);
-    
+
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $userData = reset($results);
 

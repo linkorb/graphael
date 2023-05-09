@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Graphael\Services;
+namespace LinkORB\GraphaelBundle\Services;
 
 use GraphQL\Type\Definition\ResolveInfo;
 use Plaza\Api\Logger\EventLogger;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Graphael\Services\DependencyInjection;
+namespace LinkORB\GraphaelBundle\Services\DependencyInjection;
 
 use Psr\Container\ContainerInterface;
 

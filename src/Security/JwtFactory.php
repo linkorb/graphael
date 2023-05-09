@@ -1,29 +1,36 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security;
+namespace LinkORB\GraphaelBundle\Security;
 
 use Firebase\JWT\JWT;
-use Graphael\Exception\OmittedJwtTokenException;
-use Graphael\Security\Token\JsonWebToken;
+use LinkORB\GraphaelBundle\Exception\OmittedJwtTokenException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\User\InMemoryUser;
 use UnexpectedValueException;
 
 class JwtFactory
 {
+    public const ANONYMOUS_USER = 'anonymous';
     public const USERNAME_CLAIM_ID = 'username';
     public const ROLES_CLAIM_ID = 'roles';
     public const DEFAULT_ROLE = 'ROLE_AUTHENTICATED';
 
-    private $usernameClaim = self::USERNAME_CLAIM_ID;
+    public function __construct(
+        private bool $jwtEnabled,
+        private string $adminRole,
+        private string $usernameClaim = self::USERNAME_CLAIM_ID,
+        private string $rolesClaim = self::ROLES_CLAIM_ID,
+        private ?string $defaultRole = self::DEFAULT_ROLE,
+    ) {}
 
-    private $rolesClaim = self::ROLES_CLAIM_ID;
-
-    private $defaultRole = self::DEFAULT_ROLE;
-
-    public function createFromRequest(Request $request): TokenInterface
+    public function createFromRequest(Request $request): InMemoryUser
     {
+        // Disabled jwt auth means admin role for every request
+        if (!$this->jwtEnabled) {
+            return new InMemoryUser(static::ANONYMOUS_USER, null, [$this->adminRole]);
+        }
+
         $rawJwtString = $this->extractRawJwt($request);
 
         $jwtSegments = explode('.', $rawJwtString);
@@ -42,36 +49,12 @@ class JwtFactory
         if (is_string($roles)) {
             $roles = explode(",", $roles);
         }
-        $token = new JsonWebToken($roles, $rawJwtString);
 
         if (empty($payload->{$this->usernameClaim})) {
             throw new AuthenticationException('No username claim passed in JWT');
         }
 
-        $token->setUser($payload->{$this->usernameClaim});
-
-        return $token;
-    }
-
-    public function setUsernameClaim(string $usernameClaim): self
-    {
-        $this->usernameClaim = $usernameClaim;
-
-        return $this;
-    }
-
-    public function setRolesClaim(string $rolesClaim): self
-    {
-        $this->rolesClaim = $rolesClaim;
-
-        return $this;
-    }
-
-    public function setDefaultRole(string $defaultRole): self
-    {
-        $this->defaultRole = $defaultRole;
-
-        return $this;
+        return new InMemoryUser($payload->{$this->usernameClaim}, $rawJwtString, $roles);
     }
 
     private function extractRawJwt(Request $request): string
