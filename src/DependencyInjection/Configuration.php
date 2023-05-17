@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\DependencyInjection;
+namespace LinkORB\Bundle\GraphaelBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;

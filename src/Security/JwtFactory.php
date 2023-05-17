@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Security;
+namespace LinkORB\Bundle\GraphaelBundle\Security;
 
 use Firebase\JWT\JWT;
-use LinkORB\GraphaelBundle\Exception\OmittedJwtTokenException;
+use LinkORB\Bundle\GraphaelBundle\Exception\OmittedJwtTokenException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\InMemoryUser;

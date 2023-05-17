@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Security;
+namespace LinkORB\Bundle\GraphaelBundle\Security;
 
 use Firebase\JWT\JWT;
-use LinkORB\GraphaelBundle\Exception\OmittedJwtTokenException;
-use LinkORB\GraphaelBundle\Security\JwtCertManager\JwtCertManagerInterface;
-use LinkORB\GraphaelBundle\Security\UserProvider\User;
+use LinkORB\Bundle\GraphaelBundle\Exception\OmittedJwtTokenException;
+use LinkORB\Bundle\GraphaelBundle\Security\JwtCertManager\JwtCertManagerInterface;
+use LinkORB\Bundle\GraphaelBundle\Security\UserProvider\User;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;

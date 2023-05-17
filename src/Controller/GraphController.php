@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Controller;
+namespace LinkORB\Bundle\GraphaelBundle\Controller;
 use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\ExecutionResult;
 use GraphQL\Utils\Utils;
-use LinkORB\GraphaelBundle\Services\Server;
+use LinkORB\Bundle\GraphaelBundle\Services\Server;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 

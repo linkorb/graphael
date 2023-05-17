@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Security\UserProvider;
+namespace LinkORB\Bundle\GraphaelBundle\Security\UserProvider;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 

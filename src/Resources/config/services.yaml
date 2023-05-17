@@ -11,7 +11,7 @@ parameters:
   graphael.cache_driver_file_path: '%env(string:resolve:%graphael.environment_prefix%CACHE_DRIVER_FILE_PATH)%'
 
 services:
-  LinkORB\GraphaelBundle\Controller\:
+  LinkORB\Bundle\GraphaelBundle\Controller\:
     resource: '../src/Controller/'
     tags: ['controller.service_arguments']
 
@@ -19,12 +19,12 @@ services:
 
   PDO:
 
-  LinkORB\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry:
-  LinkORB\GraphaelBundle\Security\JwtFactory:
-  LinkORB\GraphaelBundle\Security\Provider\JwtAuthProvider:
-  LinkORB\GraphaelBundle\Services\Server:
-  LinkORB\GraphaelBundle\Services\FieldResolver:
+  LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry:
+  LinkORB\Bundle\GraphaelBundle\Security\JwtFactory:
+  LinkORB\Bundle\GraphaelBundle\Security\Provider\JwtAuthProvider:
+  LinkORB\Bundle\GraphaelBundle\Services\Server:
+  LinkORB\Bundle\GraphaelBundle\Services\FieldResolver:
 
-  LinkORB\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface: '@LinkORB\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry'
+  LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface: '@LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry'
 
 

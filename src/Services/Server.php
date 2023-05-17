@@ -1,6 +1,6 @@
 <?php
 
-namespace LinkORB\GraphaelBundle\Services;
+namespace LinkORB\Bundle\GraphaelBundle\Services;
 
 use GraphQL\Error\DebugFlag;
 use GraphQL\Server\StandardServer;

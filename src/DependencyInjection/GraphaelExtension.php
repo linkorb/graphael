@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\DependencyInjection;
+namespace LinkORB\Bundle\GraphaelBundle\DependencyInjection;
 
 use Connector\Connector;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\PhpFileCache;
-use LinkORB\GraphaelBundle\Controller\GraphController;
-use LinkORB\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface;
-use LinkORB\GraphaelBundle\Services\FieldResolver;
-use LinkORB\GraphaelBundle\Services\Server;
+use LinkORB\Bundle\GraphaelBundle\Controller\GraphController;
+use LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface;
+use LinkORB\Bundle\GraphaelBundle\Services\FieldResolver;
+use LinkORB\Bundle\GraphaelBundle\Services\Server;
 use PDO;
 use RuntimeException;
 use Symfony\Component\Config\FileLocator;

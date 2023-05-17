@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Security\Authorization;
+namespace LinkORB\Bundle\GraphaelBundle\Security\Authorization;
 
-use LinkORB\GraphaelBundle\Entity\Security\UsernameAuthorization;
+use LinkORB\Bundle\GraphaelBundle\Entity\Security\UsernameAuthorization;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 

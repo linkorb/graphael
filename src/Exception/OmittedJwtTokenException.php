@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Exception;
+namespace LinkORB\Bundle\GraphaelBundle\Exception;
 
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace LinkORB\GraphaelBundle\Services\DependencyInjection;
+namespace LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection;
 
 interface TypeRegistryInterface
 {

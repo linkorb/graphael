@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace LinkORB\GraphaelBundle\Security\JwtCertManager;
+namespace LinkORB\Bundle\GraphaelBundle\Security\JwtCertManager;
 
 interface JwtCertManagerInterface
 {
