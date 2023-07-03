@@ -2,18 +2,15 @@
 
 namespace LinkORB\Bundle\GraphaelBundle\DependencyInjection;
 
-use Connector\Connector;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\PhpFileCache;
-use LinkORB\Bundle\GraphaelBundle\Controller\GraphController;
-use LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface;
 use LinkORB\Bundle\GraphaelBundle\Services\FieldResolver;
 use LinkORB\Bundle\GraphaelBundle\Services\Server;
-use PDO;
 use RuntimeException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -38,7 +35,9 @@ class GraphaelExtension extends Extension
             $options['jwt_key'] = $jwtKey;
         }
 
-        $this->processConnector($options, $container);
+        if ($options['pdo_url'] ?? null) {
+            $container->setParameter('graphael.pdo_url', $options['pdo_url']);
+        }
 
         if (!isset($options['type_namespace'])) {
             throw new RuntimeException("type_namespace not configured");
@@ -47,21 +46,21 @@ class GraphaelExtension extends Extension
             throw new RuntimeException("type_path not configured");
         }
 
-        $container->getDefinition(TypeRegistryInterface::class)->addArgument($container);
-
         $this->processTypes($options, $container);
-
-        $container->register($options['logger']);
-
-        $container->getDefinition(GraphController::class)->setArgument('$logger', new Reference($options['logger']));
-        $container->getDefinition(FieldResolver::class)->addArgument(new Reference($options['logger']));
 
         $this->initializeServer($options['type_namespace'], $options['type_postfix'], $container);
     }
 
     private function processCacheDriver(array $options, ContainerBuilder $container): void
     {
-        switch ($options['cache_driver']) {
+        $cacheDriver = $options['cache_driver'] ?? null;
+        try {
+            $cacheDriver = $container->getParameterBag()->resolveValue($cacheDriver);
+        } catch (ParameterNotFoundException) {
+            // Value is set not as parameter, so let's use it as it is
+        }
+
+        switch ($cacheDriver) {
             case 'file':
                 $container
                     ->register(Cache::class, PhpFileCache::class)
@@ -79,34 +78,16 @@ class GraphaelExtension extends Extension
         }
     }
 
-    private function processConnector(array $options, ContainerBuilder $container): void
-    {
-        $connector = $container->get(Connector::class);
-
-        $pdoConfig = $connector->getConfig($options['pdo_url']);
-        $mode = 'db';
-        $pdoDsn = $connector->getPdoDsn($pdoConfig, $mode);
-
-        $container->getDefinition(PDO::class)
-            ->addArgument($pdoDsn)
-            ->addArgument($pdoConfig->getUsername())
-            ->addArgument($pdoConfig->getPassword())
-            ->addArgument([
-                PDO::MYSQL_ATTR_FOUND_ROWS => true
-            ])
-        ;
-    }
-
     private function processTypes(array $options, ContainerBuilder $container): void
     {
         // Auto register QueryTypes
         foreach (glob($options['type_path'] . '/*Type.php') as $filename) {
-            $className = $options['type_path'] . '\\' . basename($filename, '.php');
+            $className = $options['type_namespace'] . '\\' . basename($filename, '.php');
             if (!is_array(class_implements($className))) {
                 throw new RuntimeException("Can't register class (failed to load, or does not implement anything): " . $className);
             }
             if (is_subclass_of($className, 'GraphQL\\Type\\Definition\\Type')) {
-                $container->getDefinition($className)->setPublic(true);
+                $container->autowire($className, $className)->setPublic(true);
             }
         }
     }
@@ -116,15 +97,14 @@ class GraphaelExtension extends Extension
         $container->getDefinition(Server::class)
             ->addArgument(new Reference($typeNamespace . '\QueryType'))
             ->addArgument(new Reference($typeNamespace . '\MutationType'))
-            ->addArgument(function ($name) use ($container, $typeNamespace, $typePostfix) {
-                $className = $typeNamespace . '\\' . $name . $typePostfix;
-                return $container->get($className);
-            })
             ->addArgument([])
             ->addArgument(new Reference(AuthorizationCheckerInterface::class))
             ->addArgument('%'.Server::CONTEXT_ADMIN_ROLE_KEY.'%')
             ->addArgument(new Reference('request_stack'))
             ->addArgument(new Reference(FieldResolver::class))
+            ->addArgument(new Reference('service_container'))
+            ->addArgument($typeNamespace)
+            ->addArgument($typePostfix)
         ;
     }
 }

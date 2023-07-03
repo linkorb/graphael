@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace LinkORB\Bundle\GraphaelBundle\Services;
 
 use GraphQL\Type\Definition\ResolveInfo;
-use Plaza\Api\Logger\EventLogger;
+use Psr\Log\LoggerInterface;
 use Pwa\TimeElapsed;
 
 class FieldResolver
 {
     private $eventLogger;
 
-    public function __construct(EventLogger $eventLogger)
+    public function __construct(LoggerInterface $eventLogger)
     {
         $this->eventLogger = $eventLogger;
     }

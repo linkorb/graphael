@@ -1,0 +1,43 @@
+parameters:
+  graphael.jwt_algo: '%env(default:RS256:string:GRAPHAEL_JWT_ALGO)%'
+  graphael.jwt_key: '%env(string:GRAPHAEL_JWT_KEY)%'
+  graphael.jwt_username_claim: '%env(string:GRAPHAEL_JWT_USERNAME_CLAIM)%'
+  graphael.jwt_roles_claim: '%env(string:GRAPHAEL_JWT_ROLES_CLAIM)%'
+  graphael.admin_role: '%env(default:ROLE_ADMIN:string:GRAPHAEL_ADMIN_ROLE)%'
+  graphael.jwt_default_role: '%env(string:GRAPHAEL_JWT_DEFAULT_ROLE)%'
+  graphael.cache_driver: '%env(string:GRAPHAEL_CACHE_DRIVER)%'
+  graphael.cache_driver_file_path: '%env(string:GRAPHAEL_CACHE_DRIVER_FILE_PATH)%'
+  graphael.pdo_url: '%env(string:GRAPHAEL_PDO_URL)%'
+
+services:
+  _defaults:
+    autowire: true
+    public: true
+
+  LinkORB\Bundle\GraphaelBundle\Controller\:
+    resource: '../src/Controller/'
+    tags: ['controller.service_arguments']
+
+  Connector\Connector:
+
+  PDO:
+    class: PDO
+    factory: ['LinkORB\Bundle\GraphaelBundle\Security\Factory\ConnectorFactory', 'createConnector']
+    arguments:
+      $pdoUrl: '%graphael.pdo_url%'
+
+  LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry:
+    arguments: ['@service_container']
+
+  LinkORB\Bundle\GraphaelBundle\Services\Server:
+    class: LinkORB\Bundle\GraphaelBundle\Services\Server
+  LinkORB\Bundle\GraphaelBundle\Services\FieldResolver:
+
+  LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\TypeRegistryInterface:
+    alias: LinkORB\Bundle\GraphaelBundle\Services\DependencyInjection\ContainerTypeRegistry
+    public: true
+
+  LinkORB\Bundle\GraphaelBundle\Security\JwtFactory:
+    arguments:
+      $jwtEnabled: '%graphael.jwt_key%'
+      $adminRole: '%graphael.jwt_default_role%'

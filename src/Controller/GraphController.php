@@ -5,6 +5,7 @@ use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\ExecutionResult;
 use GraphQL\Utils\Utils;
 use LinkORB\Bundle\GraphaelBundle\Services\Server;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -12,7 +13,7 @@ class GraphController
 {
     public function __construct(
         private Server $server,
-        private $logger,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(Request $request)
