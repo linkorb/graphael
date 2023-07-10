@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Security\Authorization;
+namespace LinkORB\Bundle\GraphaelBundle\Security\Authorization;
 
-use Graphael\Entity\Security\UsernameAuthorization;
+use LinkORB\Bundle\GraphaelBundle\Entity\Security\UsernameAuthorization;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -12,14 +12,17 @@ class UsernameVoter extends Voter
 
     protected function supports($attribute, $subject): bool
     {
-        return $subject instanceof UsernameAuthorization && $attribute === static::USER_ROLE;
+        return $subject instanceof UsernameAuthorization &&
+            is_array($attribute) &&
+            in_array(static::USER_ROLE, $attribute, true)
+        ;
     }
 
     public function voteOnAttribute($attribute, $subject, TokenInterface $token): bool
     {
         assert($subject instanceof UsernameAuthorization);
-        assert($attribute === static::USER_ROLE);
+        assert(in_array(static::USER_ROLE, $attribute, true));
 
-        return $token->getUsername() === $subject->getAccessedUsername();
+        return $token->getUser()->getUserIdentifier() === $subject->getAccessedUsername();
     }
 }

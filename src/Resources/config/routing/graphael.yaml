@@ -1,0 +1,3 @@
+graphael_endpoint:
+  path: /
+  controller: LinkORB\Bundle\GraphaelBundle\Controller\GraphController

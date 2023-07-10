@@ -1,9 +1,8 @@
 <?php
 
-namespace Graphael;
+namespace LinkORB\Bundle\GraphaelBundle\Services;
 
 use GraphQL\Type\Definition\ObjectType;
-use GraphQL\Type\Definition\ResolveInfo;
 use PDO;
 use PDOException;
 

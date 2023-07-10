@@ -3,7 +3,7 @@
   "description": "Graphael: GraphQL Server builder",
   "homepage": "http://www.github.com/linkorb/graphael",
   "keywords": ["graphael", "graphql", "linkorb"],
-  "type": "application",
+  "type": "symfony-bundle",
   "authors": [
     {
       "name": "Joost Faassen",
@@ -12,21 +12,20 @@
     }
   ],
   "require": {
-    "php": ">=7.2",
-    "symfony/options-resolver": "~3.0",
-    "symfony/dependency-injection": "~3.3",
-    "webonyx/graphql-php": "^0.13.8",
+    "php": ">=8.0",
+    "webonyx/graphql-php": "^15.2",
     "linkorb/connector": "~1.0",
     "firebase/php-jwt": "~5.0",
     "pwa/time-elapsed": "^1.0",
-    "symfony/security-core": "^4.2 || ^5.0 ",
-    "symfony/http-foundation": "^4.2 || ^5.0",
+    "symfony/security-core": "^6",
     "ext-pdo": "*",
-    "doctrine/cache": "^1.10"
+    "doctrine/cache": "^1.10",
+    "symfony/framework-bundle": "^6",
+    "symfony/security-bundle": "^6.0"
   },
   "autoload": {
     "psr-4": {
-        "Graphael\\": "src/"
+        "LinkORB\\Bundle\\GraphaelBundle\\": "src/"
     }
   },
   "license": "MIT"

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Graphael\Entity\Security;
+namespace LinkORB\Bundle\GraphaelBundle\Entity\Security;
 
 class UsernameAuthorization implements AuthorizationEntityInterface
 {
