@@ -12,13 +12,16 @@ class UsernameVoter extends Voter
 
     protected function supports($attribute, $subject): bool
     {
-        return $subject instanceof UsernameAuthorization && $attribute === static::USER_ROLE;
+        return $subject instanceof UsernameAuthorization &&
+            is_array($attribute) &&
+            in_array(static::USER_ROLE, $attribute, true)
+        ;
     }
 
     public function voteOnAttribute($attribute, $subject, TokenInterface $token): bool
     {
         assert($subject instanceof UsernameAuthorization);
-        assert($attribute === static::USER_ROLE);
+        assert(in_array(static::USER_ROLE, $attribute, true));
 
         return $token->getUser()->getUserIdentifier() === $subject->getAccessedUsername();
     }

@@ -33,6 +33,7 @@ class GraphaelExtension extends Extension
         if (file_exists($options['jwt_key'])) {
             $jwtKey = file_get_contents($options['jwt_key']);
             $options['jwt_key'] = $jwtKey;
+            $container->setParameter('graphael.jwt_key', $options['jwt_key']);
         }
 
         if ($options['pdo_url'] ?? null) {

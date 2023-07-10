@@ -33,7 +33,8 @@ class JwtUserProvider implements UserProviderInterface
 
     public function supportsClass($class): bool
     {
-        return $class === UserInterface::class;
+        $interfaces = class_implements($class);
+        return $interfaces !== false && in_array(UserInterface::class, $interfaces);
     }
 
     private function getUser(string $username): UserInterface
